@@ -38,9 +38,9 @@ int main(void) {
 
     // Objects initialisation
     Camera camera(glm::vec3(), 8., glm::vec2(-M_PI_4 * 0.5, 0.));
-    Graph g = Graph::gridGraph(10);
+    Graph g = Graph::gridGraph(100);
 
-    g.depthFirstGeneration(0);
+    g.depthFirstGenerationIterative(0);
 
     // timings
     float deltaTime = 0.0f;

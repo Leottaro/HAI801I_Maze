@@ -30,7 +30,7 @@ public:
         G.m_n = _n * _n;
         for (float i = 0; i < _n; i++) {
             for (float j = 0; j < _n; j++) {
-                G.m_vertices.push_back(glm::vec3(i / (_n - 1), 0., j / (_n - 1)));
+                G.m_vertices.push_back(glm::vec3(i / (_n - 1) - 0.5, 0., j / (_n - 1) - 0.5));
                 G.m_neighbours.push_back({});
             }
         }
@@ -79,7 +79,7 @@ public:
 
     // MAZE GENERATION
 
-    void depthFirstGeneration(size_t _current_cell, std::set<size_t> &_visited) {
+    void depthFirstGenerationRecursive(size_t _current_cell, std::set<size_t> &_visited) {
         _visited.insert(_current_cell);
 
         std::vector<size_t> cell_neighbours(m_neighbours[_current_cell]);
@@ -92,11 +92,38 @@ public:
                 continue;
             m_links.push_back(glm::uvec2(_current_cell, cell_neighbours[i]));
 
-            depthFirstGeneration(cell_neighbours[i], _visited);
+            depthFirstGenerationRecursive(cell_neighbours[i], _visited);
         }
     }
     void depthFirstGeneration(size_t _current_cell) {
         std::set<size_t> visited;
-        depthFirstGeneration(_current_cell, visited);
+        depthFirstGenerationRecursive(_current_cell, visited);
+    }
+
+    void depthFirstGenerationIterative(size_t _initial_cell) {
+        std::mt19937 rng(std::random_device{}());
+        std::set<size_t> visited{_initial_cell};
+        std::vector<size_t> stack{_initial_cell};
+        stack.reserve(m_n);
+
+        while (stack.size() != 0) {
+            size_t current_cell = stack[stack.size() - 1];
+            stack.pop_back();
+
+            std::vector<size_t> cell_neighbours(m_neighbours[current_cell]);
+            std::shuffle(cell_neighbours.begin(), cell_neighbours.end(), rng);
+
+            for (size_t i = 0; i < cell_neighbours.size(); i++) {
+                if (visited.find(cell_neighbours[i]) != visited.end())
+                    continue;
+
+                stack.push_back(current_cell);
+                m_links.push_back(glm::uvec2(current_cell, cell_neighbours[i]));
+
+                visited.insert(cell_neighbours[i]);
+                stack.push_back(cell_neighbours[i]);
+                break;
+            }
+        }
     }
 };
