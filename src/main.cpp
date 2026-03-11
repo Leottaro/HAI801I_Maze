@@ -39,9 +39,9 @@ int main(void) {
     // Objects initialisation
     Camera camera(glm::vec3(), 8., glm::vec2(-M_PI_4 * 0.5, 0.));
 
-    Graph g = Graph::gridGraph(20);
-    g.depthFirstGenerationIterative(0);
-    // g.kruskalGeneration();
+    Graph original = Graph::gridGraph(100);
+    // Graph maze = original.depthFirstGenerationIterative(0);
+    Graph maze = original.kruskalGeneration();
 
     // timings
     float deltaTime = 0.0f;
@@ -80,8 +80,8 @@ int main(void) {
         glLoadMatrixf(glm::value_ptr(view));
 
         // Objects rendering
-
-        g.draw();
+        maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f);
+        // original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
 
         // ImGui Render
         ImGui::Render();

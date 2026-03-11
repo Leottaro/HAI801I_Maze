@@ -18,7 +18,7 @@ void Camera::updateMatrix() {
     glm::vec3 right = glm::cross(front, VEC_UP);
     glm::vec3 up = glm::cross(right, front);
 
-    m_projection = glm::perspective(m_fovy, m_aspect_ratio, .05f, 200.f);
+    m_projection = glm::perspective(m_fovy, m_aspect_ratio, .01f, 200.f);
     m_view = glm::lookAt(m_transformation.getTranslation(), m_transformation.getTranslation() + front, up);
 }
 

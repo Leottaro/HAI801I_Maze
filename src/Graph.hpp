@@ -19,9 +19,6 @@ class Graph {
     std::vector<glm::vec3> m_vertices;
     std::vector<std::unordered_set<size_t>> m_neighbours;
 
-    // maze
-    std::vector<glm::uvec2> m_links;
-
 public:
     // CREATION
 
@@ -146,56 +143,65 @@ public:
 
     // DRAW
 
-    void draw() const {
-        glColor3f(1.f, 0.f, 0.f);
-        glLineWidth(5.f);
+    void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f) const {
+        glColor3fv(glm::value_ptr(_color));
+        glLineWidth(_line_width);
         glBegin(GL_LINES);
-        for (size_t i = 0; i < m_links.size(); i++) {
-            glVertex3f(m_vertices[m_links[i][0]][0], m_vertices[m_links[i][0]][1], m_vertices[m_links[i][0]][2]);
-            glVertex3f(m_vertices[m_links[i][1]][0], m_vertices[m_links[i][1]][1], m_vertices[m_links[i][1]][2]);
+        for (size_t v0 = 0; v0 < m_n; v0++) {
+            for (size_t v1 : m_neighbours[v0]) {
+                glVertex3fv(glm::value_ptr(m_vertices[v0]));
+                glVertex3fv(glm::value_ptr(m_vertices[v1]));
+            }
         }
-        glEnd();
-
-        // glColor3f(1.f, 0.831373f, 0.211765f);
-        // glLineWidth(.5f);
-        // glBegin(GL_LINES);
-        // for (size_t v0 = 0; v0 < m_n; v0++) {
-        //     for (size_t v1 : m_neighbours[v0]) {
-        //         glVertex3f(m_vertices[v0].x, m_vertices[v0].y, m_vertices[v0].z);
-        //         glVertex3f(m_vertices[v1].x, m_vertices[v1].y, m_vertices[v1].z);
-        //     }
-        // }
         glEnd();
     }
 
     // MAZE GENERATION
 
-    void depthFirstGenerationRecursive(size_t _current_cell, std::unordered_set<size_t> &_visited) {
+    void depthFirstGenerationRecursive(size_t _current_cell, std::mt19937 &_rng, std::unordered_set<size_t> &_visited, Graph &res) {
         _visited.insert(_current_cell);
-
         std::vector<size_t> cell_neighbours(m_neighbours[_current_cell].begin(), m_neighbours[_current_cell].end());
-
-        std::mt19937 rng(std::random_device{}());
-        std::shuffle(cell_neighbours.begin(), cell_neighbours.end(), rng);
+        std::shuffle(cell_neighbours.begin(), cell_neighbours.end(), _rng);
 
         for (size_t i = 0; i < cell_neighbours.size(); i++) {
             if (_visited.find(cell_neighbours[i]) != _visited.end())
                 continue;
-            m_links.push_back(glm::uvec2(_current_cell, cell_neighbours[i]));
 
-            depthFirstGenerationRecursive(cell_neighbours[i], _visited);
+            res.m_neighbours[_current_cell].insert(cell_neighbours[i]);
+            res.m_neighbours[cell_neighbours[i]].insert(_current_cell);
+
+            depthFirstGenerationRecursive(cell_neighbours[i], _rng, _visited, res);
         }
     }
-    void depthFirstGeneration(size_t _current_cell) {
+    Graph depthFirstGeneration(size_t _current_cell) {
         std::unordered_set<size_t> visited;
-        depthFirstGenerationRecursive(_current_cell, visited);
+        std::mt19937 rng(std::random_device{}());
+        Graph res;
+        res.m_n = m_n;
+        res.m_vertices = std::vector<glm::vec3>(m_vertices);
+        res.m_neighbours.resize(m_n);
+        for (size_t i = 0; i < m_n; i++) {
+            res.m_neighbours[i] = {};
+        }
+
+        depthFirstGenerationRecursive(_current_cell, rng, visited, res);
+
+        return res;
     }
 
-    void depthFirstGenerationIterative(size_t _initial_cell) {
+    Graph depthFirstGenerationIterative(size_t _initial_cell) {
         std::mt19937 rng(std::random_device{}());
-        std::unordered_set<size_t> visited{_initial_cell};
+        std::unordered_set<size_t> already_stacked{_initial_cell};
         std::vector<size_t> stack{_initial_cell};
         stack.reserve(m_n);
+
+        Graph res;
+        res.m_n = m_n;
+        res.m_vertices = std::vector<glm::vec3>(m_vertices);
+        res.m_neighbours.resize(m_n);
+        for (size_t i = 0; i < m_n; i++) {
+            res.m_neighbours[i] = {};
+        }
 
         while (stack.size() != 0) {
             size_t current_cell = stack[stack.size() - 1];
@@ -205,27 +211,34 @@ public:
             std::shuffle(cell_neighbours.begin(), cell_neighbours.end(), rng);
 
             for (size_t i = 0; i < cell_neighbours.size(); i++) {
-                if (visited.find(cell_neighbours[i]) != visited.end())
-                    continue;
+                if (already_stacked.insert(cell_neighbours[i]).second) {
+                    res.m_neighbours[current_cell].insert(cell_neighbours[i]);
+                    res.m_neighbours[cell_neighbours[i]].insert(current_cell);
 
-                stack.push_back(current_cell);
-                m_links.push_back(glm::uvec2(current_cell, cell_neighbours[i]));
-
-                visited.insert(cell_neighbours[i]);
-                stack.push_back(cell_neighbours[i]);
-                break;
+                    stack.push_back(current_cell);
+                    stack.push_back(cell_neighbours[i]);
+                    break;
+                }
             }
         }
+
+        return res;
     }
 
-    void kruskalGeneration() {
-        std::vector<std::unordered_set<size_t>> sets(m_n);
+    Graph kruskalGeneration() {
+        Graph res;
+        res.m_n = m_n;
+        res.m_vertices = std::vector<glm::vec3>(m_vertices);
+        res.m_neighbours.resize(m_n);
         for (size_t i = 0; i < m_n; i++) {
-            sets[i] = {i};
+            res.m_neighbours[i] = {};
         }
 
+        std::vector<size_t> ids(m_n);
         std::vector<glm::uvec2> walls;
+        walls.reserve(m_n);
         for (size_t v0 = 0; v0 < m_n; v0++) {
+            ids[v0] = v0;
             for (size_t v1 : m_neighbours[v0]) {
                 if (v0 < v1) {
                     walls.push_back(glm::uvec2(v0, v1));
@@ -236,20 +249,42 @@ public:
         std::mt19937 rng(std::random_device{}());
         std::shuffle(walls.begin(), walls.end(), rng);
 
+        std::unordered_set<size_t> already_stacked;
+        std::vector<size_t> stack;
+        already_stacked.reserve(m_n);
+        stack.reserve(m_n);
         for (const glm::uvec2 &wall : walls) {
-            std::vector<size_t> diff;
-            std::set_symmetric_difference(sets[wall.x].begin(), sets[wall.x].end(), sets[wall.y].begin(), sets[wall.y].end(), std::back_inserter(diff));
+            if (ids[wall.x] == ids[wall.y]) {
+                continue;
+            }
+            res.m_neighbours[wall.x].insert(wall.y);
+            res.m_neighbours[wall.y].insert(wall.x);
 
-            if (diff.size() > 0) {
-                sets[wall.x].insert(diff.begin(), diff.end());
+            size_t new_id = std::min(ids[wall.x], ids[wall.y]);
+            size_t old_id = std::max(ids[wall.x], ids[wall.y]);
+            already_stacked.clear();
+            already_stacked.insert(wall.x);
+            already_stacked.insert(wall.y);
+            stack.clear();
+            stack.push_back(wall.x);
+            stack.push_back(wall.y);
+            while (stack.size() > 0) {
+                size_t v0 = stack[stack.size() - 1];
+                stack.pop_back();
 
-                for (size_t v : sets[wall.x]) {
-                    if (v != wall.x) {
-                        sets[v] = sets[wall.x];
+                if (ids[v0] != old_id) {
+                    continue;
+                }
+
+                ids[v0] = new_id;
+                for (size_t v1 : m_neighbours[v0]) {
+                    if (already_stacked.insert(v1).second) {
+                        stack.push_back(v1);
                     }
                 }
-                m_links.push_back(wall);
             }
         }
+
+        return res;
     }
 };
