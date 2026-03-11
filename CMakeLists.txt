@@ -22,6 +22,8 @@ set(APP_SOURCES
     src/Camera.cpp
 
     src/Graph.hpp
+    src/GraphGenerator.cpp
+    src/GraphMazeGenerator.cpp
 )
 
 add_executable(${APP_TARGET_DEBUG} ${APP_SOURCES})
