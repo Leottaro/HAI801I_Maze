@@ -18,9 +18,10 @@ set(APP_SOURCES
     src/main.cpp
 
     src/Transformation.hpp
-
     src/Camera.hpp
     src/Camera.cpp
+
+    src/Graph.hpp
 )
 
 add_executable(${APP_TARGET_DEBUG} ${APP_SOURCES})

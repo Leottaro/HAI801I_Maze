@@ -38,8 +38,9 @@ int main(void) {
 
     // Objects initialisation
     Camera camera(glm::vec3(), 8., glm::vec2(-M_PI_4 * 0.5, 0.));
-    Graph g;
-    g = gridGraph(10);
+    Graph g = Graph::gridGraph(10);
+
+    g.depthFirstGeneration(0);
 
     // timings
     float deltaTime = 0.0f;
@@ -79,31 +80,7 @@ int main(void) {
 
         // Objects rendering
 
-        drawGraph(g);
-
-        // glBegin(GL_TRIANGLES);
-        // glColor3f(1.f, 0.f, 0.f);
-        // glVertex3f(0.f, 0.f, 0.f);
-        // glColor3f(0.f, 1.f, 0.f);
-        // glVertex3f(0.f, 0.f, 1.f);
-        // glColor3f(0.f, 0.f, 1.f);
-        // glVertex3f(1.f, 0.f, 0.f);
-
-        // glColor3f(1.f, 0.f, 0.f);
-        // glVertex3f(1.f, 0.f, 1.f);
-        // glColor3f(0.f, 0.f, 1.f);
-        // glVertex3f(1.f, 0.f, 0.f);
-        // glColor3f(0.f, 1.f, 0.f);
-        // glVertex3f(0.f, 0.f, 1.f);
-        // glEnd();
-
-        // glColor3f(1.f, 1.f, 1.f);
-        // glBegin(GL_LINES);
-
-        // glVertex3f(0.f, 0.f, 0.f);
-        // glVertex3f(0.f, 1.f, 0.f);
-
-        // glEnd();
+        g.draw();
 
         // ImGui Render
         ImGui::Render();
@@ -219,6 +196,7 @@ void initOpenGL() {
     glEnable(GL_DEPTH_TEST);              // Enable depth test
     glDepthFunc(GL_LESS);                 // Accept fragment if it closer to the camera than the former one
     glDisable(GL_CULL_FACE);              // Keep single-face geometry visible while orbiting the camera
+    glEnable(GL_POINT_SMOOTH);
 }
 
 void globalInit() {
