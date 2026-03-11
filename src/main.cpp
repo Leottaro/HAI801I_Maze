@@ -38,9 +38,10 @@ int main(void) {
 
     // Objects initialisation
     Camera camera(glm::vec3(), 8., glm::vec2(-M_PI_4 * 0.5, 0.));
-    Graph g = Graph::cubeGraph(10);
 
+    Graph g = Graph::gridGraph(20);
     g.depthFirstGenerationIterative(0);
+    // g.kruskalGeneration();
 
     // timings
     float deltaTime = 0.0f;

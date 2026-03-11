@@ -18,7 +18,7 @@ void Camera::updateMatrix() {
     glm::vec3 right = glm::cross(front, VEC_UP);
     glm::vec3 up = glm::cross(right, front);
 
-    m_projection = glm::perspective(m_fovy, m_aspect_ratio, .1f, 200.f);
+    m_projection = glm::perspective(m_fovy, m_aspect_ratio, .05f, 200.f);
     m_view = glm::lookAt(m_transformation.getTranslation(), m_transformation.getTranslation() + front, up);
 }
 
@@ -57,7 +57,7 @@ void Camera::update(GLFWwindow *_window, float _deltaTime, glm::vec3 _target_pos
 
     // input handle
     if (!disable_mouse_actions) {
-        m_desired_distance = glm::max(m_desired_distance - m_scroll_speed * _scroll.y, 1.f);
+        m_desired_distance = glm::max(m_desired_distance - m_scroll_speed * _scroll.y, .1f);
         if (glfwGetMouseButton(_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             m_transformation.addEulerAngles(glm::vec3(
                 -_deltaTime * m_rotation_speed * _cursor_vel.y,
