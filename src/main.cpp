@@ -41,7 +41,8 @@ int main(void) {
 
     Graph original = Graph::gridGraph(100);
     // Graph maze = original.depthFirstGenerationIterative(0);
-    Graph maze = original.kruskalGeneration();
+    // Graph maze = original.kruskalGeneration();
+    Graph maze = original.primGeneration();
 
     // timings
     float deltaTime = 0.0f;

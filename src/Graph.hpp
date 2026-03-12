@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <random>
+#include <functional>
 
 class Graph {
     size_t m_n;
@@ -26,8 +27,7 @@ public:
     static Graph cubeGraph(float _n);
     static Graph circleGraph(float _nbCercles, float _n);
 
-    // DRAWING
-
+    // GENERAL
     void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f) const {
         glColor3fv(glm::value_ptr(_color));
         glLineWidth(_line_width);
@@ -43,10 +43,12 @@ public:
 
     // MAZE GENERATION
 private:
-    void _depthFirstGenerationRecursive(size_t _current_cell, std::mt19937 &_rng, std::unordered_set<size_t> &_visited, Graph &res) const;
+    void _depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937 &_rng, std::unordered_set<size_t> &_visited, Graph &res) const;
+    Graph _cloneVertices() const;
 
 public:
-    Graph depthFirstGenerationRecursive(size_t _initial_cell = 0) const;
-    Graph depthFirstGenerationIterative(size_t _initial_cell = 0) const;
+    Graph depthFirstRecursiveGeneration(size_t _initial_cell = 0) const;
+    Graph depthFirstIterativeGeneration(size_t _initial_cell = 0) const;
     Graph kruskalGeneration() const;
+    Graph primGeneration(size_t _initial_cell = 0) const;
 };
