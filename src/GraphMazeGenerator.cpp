@@ -130,13 +130,14 @@ Graph Graph::primGeneration(size_t _initial_cell) const {
     std::vector<bool> marked(m_n, false);
     marked[_initial_cell] = true;
 
-    glm::uvec2 wall{_initial_cell, rand() % m_neighbours[_initial_cell].size()};
+    std::vector<size_t> initial_cell_neighbours(m_neighbours[_initial_cell].begin(), m_neighbours[_initial_cell].end());
+    glm::uvec2 wall{_initial_cell, initial_cell_neighbours[rand() % initial_cell_neighbours.size()]};
     std::vector<glm::uvec2> walls{wall};
     while (walls.size() > 0) {
         wall = walls[walls.size() - 1];
         walls.pop_back();
 
-        if (!marked[wall.y]) { // TODO: moyen que ça marche pas
+        if (!marked[wall.y]) {
             marked[wall.y] = true;
             res.m_neighbours[wall.y].insert(wall.x);
             res.m_neighbours[wall.x].insert(wall.y);

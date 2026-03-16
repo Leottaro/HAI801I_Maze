@@ -47,7 +47,7 @@ bool display_maze = true;
 bool display_path = true;
 
 #define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour\0"
-int original_type = 3, n = 10, nbCercles = 10, nbEtage = 10;
+int original_type = 0, n = 10, nbCercles = 10, nbEtage = 10;
 #define ALL_MAZE_ALGORITHM "depth-first (recursive)\0depth-first (iterative)\0Kruskal\0Prim's"
 int maze_algo = 1;
 #define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*"
