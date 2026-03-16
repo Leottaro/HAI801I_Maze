@@ -17,14 +17,13 @@
 #include <execinfo.h>
 #include <stdio.h>
 
+#include <array>
 #include <iostream>
 #include <unordered_set>
 #include <vector>
 
 #include "Camera.hpp"
 #include "Graph.hpp"
-#include <array>
-#include <vector>
 
 using namespace std;
 
@@ -39,7 +38,6 @@ std::vector<size_t> user_path = {user_pos};
 std::vector<size_t> user_neighbours;
 std::unordered_set<size_t> user_nodes = {user_pos};
 long user_path_pointer = 0;
-Graph maze;
 GLFWwindow* window;
 
 Graph original, maze, path_graph;
@@ -59,55 +57,55 @@ void globalInit();
 
 void regenerateOriginal() {
     switch (original_type) {
-    case 0:
-        original = Graph::gridGraph(n);
-        break;
-    case 1:
-        original = Graph::cubeGraph(n);
-        break;
-    case 2:
-        original = Graph::circleGraph(n, nbCercles);
-        break;
-    case 3:
-        original = Graph::sphereGraph(n, nbEtage, nbCercles);
-        break;
-    case 4:
-        original = Graph::circleGraph(n, nbCercles);
-        break;
-    default:
-        throw std::runtime_error("Unimplemented graph_type in regenerateOriginal");
+        case 0:
+            original = Graph::gridGraph(n);
+            break;
+        case 1:
+            original = Graph::cubeGraph(n);
+            break;
+        case 2:
+            original = Graph::circleGraph(n, nbCercles);
+            break;
+        case 3:
+            original = Graph::sphereGraph(n, nbEtage, nbCercles);
+            break;
+        case 4:
+            original = Graph::circleGraph(n, nbCercles);
+            break;
+        default:
+            throw std::runtime_error("Unimplemented graph_type in regenerateOriginal");
     }
 }
 
 void regenerateMaze() {
     switch (maze_algo) {
-    case 0:
-        maze = original.depthFirstRecursiveGeneration();
-        break;
-    case 1:
-        maze = original.depthFirstIterativeGeneration();
-        break;
-    case 2:
-        maze = original.kruskalGeneration();
-        break;
-    case 3:
-        maze = original.primGeneration();
-        break;
-    default:
-        throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
+        case 0:
+            maze = original.depthFirstRecursiveGeneration();
+            break;
+        case 1:
+            maze = original.depthFirstIterativeGeneration();
+            break;
+        case 2:
+            maze = original.kruskalGeneration();
+            break;
+        case 3:
+            maze = original.primGeneration();
+            break;
+        default:
+            throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
     }
 }
 
 void regeneratePath() {
     switch (pathfinding_algo) {
-    case 0:
-        path = maze.dijkstra(0, sfin);
-        break;
-    case 1:
-        // path = maze.a_star();
-        break;
-    default:
-        throw std::runtime_error("Unimplemented pathfinding_algo in regeneratePath");
+        case 0:
+            path = maze.dijkstra(0, sfin);
+            break;
+        case 1:
+            // path = maze.a_star();
+            break;
+        default:
+            throw std::runtime_error("Unimplemented pathfinding_algo in regeneratePath");
     }
     path_graph = maze.subPath(path);
 }
@@ -130,7 +128,7 @@ bool updateInterface(float _deltaTime) {
 
         ImGui::Combo("Graph type", &original_type, ALL_GRAPH_TYPES);
         ImGui::DragInt("n", &n, 1.f, 2, 100);
-        if (original_type == 2) { // circle
+        if (original_type == 2) {  // circle
             ImGui::DragInt("nb cercles", &nbCercles, 1.f, 2, 100);
         }
         if (ImGui::Button("Regenerate##original")) {
@@ -273,7 +271,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         // }
     } else if (key == GLFW_KEY_BACKSPACE) {
         // user_path_pointer = ++user_path_pointer % user_neighbours.size();
-        
     }
 }
 
