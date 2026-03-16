@@ -24,6 +24,7 @@ set(APP_SOURCES
     src/Graph.hpp
     src/GraphGenerator.cpp
     src/GraphMazeGenerator.cpp
+    src/GraphPathfinding.cpp
 )
 
 add_executable(${APP_TARGET_DEBUG} ${APP_SOURCES})

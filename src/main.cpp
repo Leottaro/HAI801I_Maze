@@ -19,19 +19,132 @@
 #include <stdio.h>
 #include <execinfo.h>
 #include <iostream>
+#include <array>
+#include <vector>
 
 using namespace std;
 
-GLuint window_width = 800, window_height = 600;
+GLuint window_width = 1280, window_height = 720;
 glm::vec2 cursor_pos = glm::vec2(0, 0);
 glm::vec2 cursor_vel = glm::vec2(0, 0);
 glm::vec2 scroll = glm::vec2(0, 0);
-int polygon_mode = GL_FILL;
+bool run_update = false;
 GLFWwindow *window;
 
-bool run_update = false;
+Graph original, maze, path_graph;
+bool display_original = false;
+bool display_maze = true;
+std::vector<size_t> path;
+bool display_path = true;
+
+#define ALL_GRAPH_TYPES "Grid\0Cube\0Circle"
+int original_type = 0, n = 10, nbCercles = 10;
+#define ALL_MAZE_ALGORITHM "depth-first (iterative)\0depth-first (recursive)\0Kruskal\0Prim's"
+int maze_algo = 0;
+#define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*"
+int pathfinding_algo = 0, sfin;
 
 void globalInit();
+
+void regenerateOriginal() {
+    switch (original_type) {
+    case 0:
+        original = Graph::gridGraph(n);
+        break;
+    case 1:
+        original = Graph::cubeGraph(n);
+        break;
+    case 2:
+        original = Graph::circleGraph(n, nbCercles);
+        break;
+    default:
+        throw std::runtime_error("Unimplemented graph_type in regenerateOriginal");
+    }
+}
+
+void regenerateMaze() {
+    switch (maze_algo) {
+    case 0:
+        maze = original.depthFirstRecursiveGeneration();
+        break;
+    case 1:
+        maze = original.depthFirstIterativeGeneration();
+        break;
+    case 2:
+        maze = original.kruskalGeneration();
+        break;
+    case 3:
+        maze = original.primGeneration();
+        break;
+    default:
+        throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
+    }
+}
+
+void regeneratePath() {
+    switch (pathfinding_algo) {
+    case 0:
+        path = maze.dijkstra(0, sfin);
+        break;
+    case 1:
+        // path = maze.a_star();
+        break;
+    default:
+        throw std::runtime_error("Unimplemented pathfinding_algo in regeneratePath");
+    }
+    path_graph = maze.subPath(path);
+}
+
+bool updateInterface(float _deltaTime) {
+    float disable_mouse_actions = false;
+    if (ImGui::Begin("Maze Interface")) {
+        disable_mouse_actions = ImGui::IsWindowHovered() || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
+
+        ImGui::SeparatorText("Displays");
+        ImGui::Spacing();
+
+        ImGui::Checkbox("display original", &display_original);
+        ImGui::Checkbox("display maze", &display_maze);
+        ImGui::Checkbox("display path", &display_path);
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Original graph");
+        ImGui::Spacing();
+
+        ImGui::Combo("Graph type", &original_type, ALL_GRAPH_TYPES);
+        ImGui::DragInt("n", &n, 1.f, 2, 100);
+        if (original_type == 2) { // circle
+            ImGui::DragInt("nb cercles", &nbCercles, 1.f, 2, 100);
+        }
+        if (ImGui::Button("Regenerate##original")) {
+            regenerateOriginal();
+            regenerateMaze();
+            regeneratePath();
+        }
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Maze");
+        ImGui::Spacing();
+
+        ImGui::Combo("algorithm##maze", &maze_algo, ALL_MAZE_ALGORITHM);
+        if (ImGui::Button("Regenerate##maze")) {
+            regenerateMaze();
+            regeneratePath();
+        }
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Pathfinding");
+        ImGui::Spacing();
+        ImGui::Combo("algorithm##path", &pathfinding_algo, ALL_PATHFINDING_ALGORITHM);
+        ImGui::DragInt("end", &sfin, 1.f, 1, maze.getN() - 1);
+        if (ImGui::Button("Recompute##path")) {
+            regeneratePath();
+        }
+    }
+
+    ImGui::End();
+    return disable_mouse_actions;
+}
 
 int main(void) {
     globalInit();
@@ -39,10 +152,11 @@ int main(void) {
     // Objects initialisation
     Camera camera(glm::vec3(), 8., glm::vec2(-M_PI_4 * 0.5, 0.));
 
-    Graph original = Graph::gridGraph(100);
-    // Graph maze = original.depthFirstGenerationIterative(0);
-    // Graph maze = original.kruskalGeneration();
-    Graph maze = original.primGeneration();
+    original = Graph::gridGraph(10);
+    maze = original.primGeneration();
+    sfin = maze.getN() - 1;
+    path = maze.dijkstra(0, sfin);
+    path_graph = maze.subPath(path);
 
     // timings
     float deltaTime = 0.0f;
@@ -66,7 +180,8 @@ int main(void) {
         ImGui::NewFrame();
 
         // OBJECTS UPDATE
-        camera.update(window, deltaTime, glm::vec3(0.), cursor_vel, scroll);
+        float disable_mouse_actions = updateInterface(deltaTime);
+        camera.update(window, deltaTime, glm::vec3(0.), disable_mouse_actions ? glm::vec2(0.) : cursor_vel, disable_mouse_actions ? glm::vec2() : scroll);
         if (run_update) {
         }
 
@@ -81,8 +196,15 @@ int main(void) {
         glLoadMatrixf(glm::value_ptr(view));
 
         // Objects rendering
-        maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f);
-        // original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
+        if (display_path) {
+            path_graph.draw(glm::vec3(0.32f, 0.64f, 0.85f), 5.f);
+        }
+        if (display_maze) {
+            maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f);
+        }
+        if (display_original) {
+            original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
+        }
 
         // ImGui Render
         ImGui::Render();
@@ -110,15 +232,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     // cout << "key:" << key << " scancode:" << scancode << " action:" << action << " mods:" << mods << endl;
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
-    } else if ((key == GLFW_KEY_W || key == GLFW_KEY_Z) && action == GLFW_PRESS) {
-        if (polygon_mode == GL_FILL) {
-            polygon_mode = GL_LINE;
-        } else if (polygon_mode == GL_LINE) {
-            polygon_mode = GL_POINT;
-        } else if (polygon_mode == GL_POINT) {
-            polygon_mode = GL_FILL;
-        }
-        glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
     } else if (key == GLFW_KEY_SPACE) {
         if (action == GLFW_PRESS) {
             if (!space_key_pressed) {
@@ -133,9 +246,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
     // cout << "mouse button:" << button << " action:" << action << " mods:" << mods << endl;
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        glfwSetInputMode(window, GLFW_CURSOR, action == GLFW_PRESS ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
-    }
+    // if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    //     glfwSetInputMode(window, GLFW_CURSOR, action == GLFW_PRESS ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    // }
 }
 
 void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {

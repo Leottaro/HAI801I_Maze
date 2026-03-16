@@ -65,7 +65,7 @@ Graph Graph::cubeGraph(float _n) {
     return G;
 }
 
-Graph Graph::circleGraph(float _nbCercles, float _n) {
+Graph Graph::circleGraph(float _n, float _nbCercles) {
     Graph G;
 
     G.m_n = _nbCercles * _n + 1;

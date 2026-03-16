@@ -49,7 +49,8 @@ bool Camera::updateInterface(float _deltaTime) {
 }
 
 void Camera::update(GLFWwindow *_window, float _deltaTime, glm::vec3 _target_position, glm::vec2 _cursor_vel, glm::vec2 _scroll) {
-    float disable_mouse_actions = updateInterface(_deltaTime);
+    // float disable_mouse_actions = updateInterface(_deltaTime);
+    float disable_mouse_actions = false;
 
     int window_width, window_height;
     glfwGetWindowSize(_window, &window_width, &window_height);

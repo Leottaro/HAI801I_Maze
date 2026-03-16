@@ -25,9 +25,10 @@ public:
 
     static Graph gridGraph(float _n);
     static Graph cubeGraph(float _n);
-    static Graph circleGraph(float _nbCercles, float _n);
+    static Graph circleGraph(float _n, float _nbCercles);
 
     // GENERAL
+    inline size_t getN() const { return m_n; }
     void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f) const {
         glColor3fv(glm::value_ptr(_color));
         glLineWidth(_line_width);
@@ -51,4 +52,25 @@ public:
     Graph depthFirstIterativeGeneration(size_t _initial_cell = 0) const;
     Graph kruskalGeneration() const;
     Graph primGeneration(size_t _initial_cell = 0) const;
+
+    // PATHFINDING
+    Graph subPath(const std::vector<size_t> _path) {
+        Graph g;
+
+        g.m_n = _path.size();
+        g.m_vertices.resize(g.m_n);
+        g.m_neighbours = std::vector<std::unordered_set<size_t>>(g.m_n);
+        for (size_t i = 0; i < g.m_n; i++) {
+            g.m_vertices[i] = m_vertices[_path[i]];
+            if (i > 0) {
+                g.m_neighbours[i - 1].insert(i);
+                g.m_neighbours[i].insert(i - 1);
+            }
+        }
+
+        return g;
+    }
+
+    std::vector<size_t> dijkstra(size_t _sdeb, size_t _sfin) const;
+    std::vector<size_t> dijkstra() const { return dijkstra(0, m_n - 1); }
 };
