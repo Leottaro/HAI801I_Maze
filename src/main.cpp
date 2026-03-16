@@ -2,8 +2,8 @@
 #include <GL/glew.h>
 
 // GLM
-#include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/glm.hpp>
 
 // GLFW
 #include <GLFW/glfw3.h>
@@ -14,11 +14,15 @@
 #include <imgui_impl_opengl3.h>
 
 // USUAL INCLUDES
+#include <execinfo.h>
+#include <stdio.h>
+
+#include <iostream>
+#include <unordered_set>
+#include <vector>
+
 #include "Camera.hpp"
 #include "Graph.hpp"
-#include <stdio.h>
-#include <execinfo.h>
-#include <iostream>
 #include <array>
 #include <vector>
 
@@ -29,7 +33,14 @@ glm::vec2 cursor_pos = glm::vec2(0, 0);
 glm::vec2 cursor_vel = glm::vec2(0, 0);
 glm::vec2 scroll = glm::vec2(0, 0);
 bool run_update = false;
-GLFWwindow *window;
+size_t user_pos = 0;
+long user_next_pos = 0;
+std::vector<size_t> user_path = {user_pos};
+std::vector<size_t> user_neighbours;
+std::unordered_set<size_t> user_nodes = {user_pos};
+long user_path_pointer = 0;
+Graph maze;
+GLFWwindow* window;
 
 Graph original, maze, path_graph;
 bool display_original = false;
@@ -168,7 +179,7 @@ int main(void) {
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
     size_t frame_count = 0;
-    glfwSwapInterval(1); // VSync - avoid having 3000 fps
+    glfwSwapInterval(1);  // VSync - avoid having 3000000 fps
     do {
         glFlush();
         glfwSwapBuffers(window);
@@ -206,7 +217,7 @@ int main(void) {
             path_graph.draw(glm::vec3(0.32f, 0.64f, 0.85f), 5.f);
         }
         if (display_maze) {
-            maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f);
+            maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f, user_nodes);
         }
         if (display_original) {
             original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
@@ -226,38 +237,54 @@ int main(void) {
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     // cout << "framebuffer size: " << width << ", " << height << endl;
     window_width = width;
     window_height = height;
     glViewport(0, 0, width, height);
 }
 
-bool space_key_pressed = false;
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    const bool pressed = (action == GLFW_PRESS);
+    const bool repeated = (action == GLFW_REPEAT);
+    const bool press_or_repeat = pressed || repeated;
+
     // cout << "key:" << key << " scancode:" << scancode << " action:" << action << " mods:" << mods << endl;
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
-    } else if (key == GLFW_KEY_SPACE) {
-        if (action == GLFW_PRESS) {
-            if (!space_key_pressed) {
-                space_key_pressed = true;
-                run_update = !run_update;
-            }
-        } else if (space_key_pressed) {
-            space_key_pressed = false;
+    } else if (key == GLFW_KEY_SPACE && pressed) {
+        run_update = !run_update;
+    } else if (key == GLFW_KEY_TAB && pressed) {
+        if (user_nodes.find(user_next_pos) != user_nodes.end()) {
+            std::cout << "on est kéblos !!!" << std::endl;
+            user_path_pointer = ++user_path_pointer % user_neighbours.size();
+            return;
         }
+        user_pos = user_next_pos;
+        user_nodes.insert(user_pos);
+        user_path.push_back(user_pos);
+        unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
+        user_neighbours.clear();
+        user_neighbours.insert(user_neighbours.end(), neigh_set.begin(), neigh_set.end());
+        user_next_pos = user_neighbours[user_path_pointer];
+        // }
+        // else if (tab_key_pressed) {
+        //     tab_key_pressed = false;
+        // }
+    } else if (key == GLFW_KEY_BACKSPACE) {
+        // user_path_pointer = ++user_path_pointer % user_neighbours.size();
+        
     }
 }
 
-void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     // cout << "mouse button:" << button << " action:" << action << " mods:" << mods << endl;
     // if (button == GLFW_MOUSE_BUTTON_LEFT) {
     //     glfwSetInputMode(window, GLFW_CURSOR, action == GLFW_PRESS ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
     // }
 }
 
-void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
+void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
     cursor_vel.x = xpos - cursor_pos.x;
     cursor_vel.y = ypos - cursor_pos.y;
     cursor_pos.x = xpos;
@@ -265,7 +292,7 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
     // cout << "cursor_pos: (" << cursor_pos.x << ", " << cursor_pos.y << ")\tcursor_vel: (" << cursor_vel.x << ", " << cursor_vel.y << ")" << endl;
 }
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     // cout << "scroll: (" << xoffset << ", " << yoffset << ")" << endl;
     scroll.x = xoffset;
     scroll.y = yoffset;
@@ -287,7 +314,7 @@ void initWindow() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 #endif
-    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GL_FALSE); // https://discourse.glfw.org/t/resizing-window-results-in-wrong-aspect-ratio/1268s
+    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GL_FALSE);  // https://discourse.glfw.org/t/resizing-window-results-in-wrong-aspect-ratio/1268s
 
     window = glfwCreateWindow(window_width, window_height, "ImGui OpenGL3 example", NULL, NULL);
     if (!window) {
@@ -306,22 +333,21 @@ void initWindow() {
 }
 
 void initOpenGL() {
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); // Ensure we can capture the escape key being pressed below
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);  // Ensure we can capture the escape key being pressed below
 
     // Ensure viewport matches framebuffer from first frame.
     int fb_w = 0, fb_h = 0;
     glfwGetFramebufferSize(window, &fb_w, &fb_h);
     glViewport(0, 0, fb_w, fb_h);
 
-    glClearColor(0.1f, 0.1f, 0.3f, 0.0f); // Dark blue background
-    glEnable(GL_DEPTH_TEST);              // Enable depth test
-    glDepthFunc(GL_LESS);                 // Accept fragment if it closer to the camera than the former one
-    glDisable(GL_CULL_FACE);              // Keep single-face geometry visible while orbiting the camera
+    glClearColor(0.1f, 0.1f, 0.3f, 0.0f);  // Dark blue background
+    glEnable(GL_DEPTH_TEST);               // Enable depth test
+    glDepthFunc(GL_LESS);                  // Accept fragment if it closer to the camera than the former one
+    glDisable(GL_CULL_FACE);               // Keep single-face geometry visible while orbiting the camera
     glEnable(GL_POINT_SMOOTH);
 }
 
 void globalInit() {
-
 #if defined(__linux__)
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
 #endif
@@ -348,7 +374,7 @@ void globalInit() {
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // IF using Docking Branch
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplGlfw_InitForOpenGL(window, true);  // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init("#version 120");
 
     initOpenGL();
