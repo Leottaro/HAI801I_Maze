@@ -45,3 +45,51 @@ std::vector<size_t> Graph::dijkstra(size_t _sdeb, size_t _sfin) const {
 
     return path;
 }
+
+std::vector<size_t> Graph::a_star(size_t _sdeb, size_t _sfin) const {
+    std::vector<size_t> gScore(m_n, UINT64_MAX);
+    std::vector<size_t> fScore(m_n, UINT64_MAX);
+    std::vector<size_t> previous(m_n, UINT64_MAX);
+    std::vector<bool> visited(m_n, false);
+
+    gScore[_sdeb] = 0;
+    fScore[_sdeb] = glm::distance(m_vertices[_sdeb], m_vertices[_sfin]);
+
+    for (size_t i = 0; i < m_n; i++) {
+        size_t u = UINT64_MAX;
+        float minFScore = UINT64_MAX;
+
+        for (size_t j = 0; j < m_n; j++) {
+            if (!visited[j] && fScore[j] < minFScore) {
+                u = j;
+                minFScore = fScore[j];
+            }
+        }
+
+        if (u == UINT64_MAX || u == _sfin)
+            break;
+
+        visited[u] = true;
+
+        for (size_t v : m_neighbours[u]) {
+            if (v <= m_n && !visited[v]) {
+                size_t tentativeGScore = gScore[u] + 1;
+                if (tentativeGScore < gScore[v]) {
+                    previous[v] = u;
+                    gScore[v] = tentativeGScore;
+                    fScore[v] = gScore[v] + glm::distance(m_vertices[v], m_vertices[_sfin]);
+                }
+            }
+        }
+    }
+
+    std::vector<size_t> path;
+    size_t curr = _sfin;
+    while (curr != UINT64_MAX) {
+        path.push_back(curr);
+        curr = previous[curr];
+    }
+    std::reverse(path.begin(), path.end());
+
+    return path;
+}

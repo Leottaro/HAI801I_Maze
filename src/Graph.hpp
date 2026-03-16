@@ -80,4 +80,7 @@ class Graph {
 
     std::vector<size_t> dijkstra(size_t _sdeb, size_t _sfin) const;
     std::vector<size_t> dijkstra() const { return dijkstra(0, m_n - 1); }
+
+    std::vector<size_t> a_star(size_t _sdeb, size_t _sfin) const;
+    std::vector<size_t> a_star() const { return a_star(0, m_n - 1); }
 };

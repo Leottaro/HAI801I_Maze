@@ -119,25 +119,24 @@ Graph Graph::circleGraph(float _n, float _nbCercles) {
     return G;
 }
 
-Graph Graph::sphereGraph(float _nbCercles, float _n, float nbEtage) {
+Graph Graph::sphereGraph(float _n, float _nbCercles, float nbEtage) {
     Graph G;
 
-    
-    G.m_n = (_nbCercles * _n + 1) * (nbEtage-2) +2;
-    G.m_vertices.push_back(glm::vec3(0.,-0.5, 0.));
+    G.m_n = (_nbCercles * _n + 1) * (nbEtage - 2) + 2;
+    G.m_vertices.push_back(glm::vec3(0., -0.5, 0.));
     G.m_neighbours.push_back({});
 
-    for (float etage = 1; etage < nbEtage-1 ; etage++){
-        int offset = (_nbCercles * _n + 1) * (etage -1) +1;
-        
-        G.m_vertices.push_back(glm::vec3(0., etage /(nbEtage-1) -0.5, 0.));
+    for (float etage = 1; etage < nbEtage - 1; etage++) {
+        int offset = (_nbCercles * _n + 1) * (etage - 1) + 1;
+
+        G.m_vertices.push_back(glm::vec3(0., etage / (nbEtage - 1) - 0.5, 0.));
         G.m_neighbours.push_back({});
         for (float i = 1; i < _nbCercles + 1; i++) {
-            float r = sin(acos((etage /(nbEtage-1) -0.5)* 2))*0.5f;
-            r = r * (i/(_nbCercles));
+            float r = sin(acos((etage / (nbEtage - 1) - 0.5) * 2)) * 0.5f;
+            r = r * (i / (_nbCercles));
             for (float j = 0; j < _n; j++) {
                 float theta = (j / _n) * 2 * M_PI;
-                G.m_vertices.push_back(glm::vec3(r * cos(theta), etage /(nbEtage-1) -0.5, r * sin(theta)));
+                G.m_vertices.push_back(glm::vec3(r * cos(theta), etage / (nbEtage - 1) - 0.5, r * sin(theta)));
                 G.m_neighbours.push_back({});
             }
         }
@@ -179,24 +178,23 @@ Graph Graph::sphereGraph(float _nbCercles, float _n, float nbEtage) {
             }
         }
 
-        if (etage == 1.f){
-            for (size_t i = 1; i < (_nbCercles * _n + 1) +1; i++){
+        if (etage == 1.f) {
+            for (size_t i = 1; i < (_nbCercles * _n + 1) + 1; i++) {
                 G.m_neighbours[0].insert(i);
                 G.m_neighbours[i].insert(0);
             }
-        }else{
-            for (size_t i = offset; i < offset + (_nbCercles * _n + 1); i++){
-                G.m_neighbours[i-(_nbCercles * _n + 1)].insert(i);
-                G.m_neighbours[i].insert(i-(_nbCercles * _n + 1));
+        } else {
+            for (size_t i = offset; i < offset + (_nbCercles * _n + 1); i++) {
+                G.m_neighbours[i - (_nbCercles * _n + 1)].insert(i);
+                G.m_neighbours[i].insert(i - (_nbCercles * _n + 1));
             }
         }
-        
     }
-    G.m_vertices.push_back(glm::vec3(0.,0.5, 0.));
+    G.m_vertices.push_back(glm::vec3(0., 0.5, 0.));
     G.m_neighbours.push_back({});
-    for (size_t i = G.m_n - (_nbCercles * _n + 1) -1 ; i < G.m_n - 1; i++){
-                G.m_neighbours[G.m_n - 1].insert(i);
-                G.m_neighbours[i].insert(G.m_n - 1);
+    for (size_t i = G.m_n - (_nbCercles * _n + 1) - 1; i < G.m_n - 1; i++) {
+        G.m_neighbours[G.m_n - 1].insert(i);
+        G.m_neighbours[i].insert(G.m_n - 1);
     }
 
     return G;
@@ -205,18 +203,17 @@ Graph Graph::sphereGraph(float _nbCercles, float _n, float nbEtage) {
 Graph Graph::sphereContourGraph(float _n, float nbEtage) {
     Graph G;
 
-    
-    G.m_n = (_n) * (nbEtage-2) +2;
-    G.m_vertices.push_back(glm::vec3(0.,-0.5, 0.));
+    G.m_n = (_n) * (nbEtage - 2) + 2;
+    G.m_vertices.push_back(glm::vec3(0., -0.5, 0.));
     G.m_neighbours.push_back({});
 
-    for (float etage = 1; etage < nbEtage-1 ; etage++){
-        int offset = (_n) * (etage -1) +1;
-        
-        float r = sin(acos((etage /(nbEtage-1) -0.5)* 2))*0.5f;
+    for (float etage = 1; etage < nbEtage - 1; etage++) {
+        int offset = (_n) * (etage - 1) + 1;
+
+        float r = sin(acos((etage / (nbEtage - 1) - 0.5) * 2)) * 0.5f;
         for (float j = 0; j < _n; j++) {
             float theta = (j / _n) * 2 * M_PI;
-            G.m_vertices.push_back(glm::vec3(r * cos(theta), etage /(nbEtage-1) -0.5, r * sin(theta)));
+            G.m_vertices.push_back(glm::vec3(r * cos(theta), etage / (nbEtage - 1) - 0.5, r * sin(theta)));
             G.m_neighbours.push_back({});
         }
 
@@ -237,23 +234,23 @@ Graph Graph::sphereContourGraph(float _n, float nbEtage) {
         }
         G.m_neighbours[offset + _n - 1].insert(offset);
         G.m_neighbours[offset].insert(offset + _n - 1);
-        if (etage == 1.f){
-            for (size_t i = 1; i < (_n) +1; i++){
+        if (etage == 1.f) {
+            for (size_t i = 1; i < (_n) + 1; i++) {
                 G.m_neighbours[0].insert(i);
                 G.m_neighbours[i].insert(0);
             }
-        }else{
-            for (size_t i = offset; i < offset + _n; i++){
-                G.m_neighbours[i- _n].insert(i);
-                G.m_neighbours[i].insert(i-_n);
+        } else {
+            for (size_t i = offset; i < offset + _n; i++) {
+                G.m_neighbours[i - _n].insert(i);
+                G.m_neighbours[i].insert(i - _n);
             }
         }
     }
-    G.m_vertices.push_back(glm::vec3(0.,0.5, 0.));
+    G.m_vertices.push_back(glm::vec3(0., 0.5, 0.));
     G.m_neighbours.push_back({});
-    for (size_t i = G.m_n - _n - 1 ; i < G.m_n - 1; i++){
-                G.m_neighbours[G.m_n - 1].insert(i);
-                G.m_neighbours[i].insert(G.m_n - 1);
+    for (size_t i = G.m_n - _n - 1; i < G.m_n - 1; i++) {
+        G.m_neighbours[G.m_n - 1].insert(i);
+        G.m_neighbours[i].insert(G.m_n - 1);
     }
 
     return G;
