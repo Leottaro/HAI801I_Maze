@@ -37,8 +37,8 @@ bool display_maze = true;
 std::vector<size_t> path;
 bool display_path = true;
 
-#define ALL_GRAPH_TYPES "Grid\0Cube\0Circle"
-int original_type = 0, n = 10, nbCercles = 10;
+#define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour"
+int original_type = 0, n = 10, nbCercles = 10, nbEtage = 10;
 #define ALL_MAZE_ALGORITHM "depth-first (iterative)\0depth-first (recursive)\0Kruskal\0Prim's"
 int maze_algo = 0;
 #define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*"
@@ -55,6 +55,12 @@ void regenerateOriginal() {
         original = Graph::cubeGraph(n);
         break;
     case 2:
+        original = Graph::circleGraph(n, nbCercles);
+        break;
+    case 3:
+        original = Graph::sphereGraph(n, nbEtage, nbCercles);
+        break;
+    case 4:
         original = Graph::circleGraph(n, nbCercles);
         break;
     default:

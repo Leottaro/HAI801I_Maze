@@ -26,6 +26,8 @@ public:
     static Graph gridGraph(float _n);
     static Graph cubeGraph(float _n);
     static Graph circleGraph(float _n, float _nbCercles);
+    static Graph sphereGraph(float _n, float _nbCercles, float nbEtage);
+    static Graph sphereContourGraph(float _n, float nbEtage);
 
     // GENERAL
     inline size_t getN() const { return m_n; }
