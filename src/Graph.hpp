@@ -20,7 +20,9 @@ class Graph {
     std::vector<glm::vec3> m_vertices;
     std::vector<std::unordered_set<size_t>> m_neighbours;
 
-   public:
+public:
+    typedef std::function<void(Graph &_g)> graph_gen_callback;
+
     // CREATION
 
     static Graph gridGraph(float _n);
@@ -31,7 +33,9 @@ class Graph {
 
     // GENERAL
     inline size_t getN() const { return m_n; }
-    void draw(const glm::vec3& _color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}) const {
+    inline std::unordered_set<size_t> getNeighbours(size_t i) const { return m_neighbours[i]; }
+
+    void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}) const {
         glColor3fv(glm::value_ptr(_color));
         glLineWidth(_line_width);
         glBegin(GL_LINES);
@@ -49,34 +53,18 @@ class Graph {
     }
 
     // MAZE GENERATION
-   private:
-    void _depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937& _rng, std::unordered_set<size_t>& _visited, Graph& res) const;
+private:
+    void _depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937 &_rng, std::unordered_set<size_t> &_visited, Graph &res, graph_gen_callback _callback) const;
     Graph _cloneVertices() const;
 
-   public:
-    Graph depthFirstRecursiveGeneration(size_t _initial_cell = 0) const;
-    Graph depthFirstIterativeGeneration(size_t _initial_cell = 0) const;
-    Graph kruskalGeneration() const;
-    Graph primGeneration(size_t _initial_cell = 0) const;
-    inline std::unordered_set<size_t> getNeighbours(size_t i) const { return m_neighbours[i]; }
+public:
+    Graph depthFirstRecursiveGeneration(graph_gen_callback _callback) const;
+    Graph depthFirstIterativeGeneration(graph_gen_callback _callback) const;
+    Graph kruskalGeneration(graph_gen_callback _callback) const;
+    Graph primGeneration(graph_gen_callback _callback) const;
 
     // PATHFINDING
-    Graph subPath(const std::vector<size_t> _path) {
-        Graph g;
-
-        g.m_n = _path.size();
-        g.m_vertices.resize(g.m_n);
-        g.m_neighbours = std::vector<std::unordered_set<size_t>>(g.m_n);
-        for (size_t i = 0; i < g.m_n; i++) {
-            g.m_vertices[i] = m_vertices[_path[i]];
-            if (i > 0) {
-                g.m_neighbours[i - 1].insert(i);
-                g.m_neighbours[i].insert(i - 1);
-            }
-        }
-
-        return g;
-    }
+    Graph subPath(const std::vector<size_t> _path);
 
     std::vector<size_t> dijkstra(size_t _sdeb, size_t _sfin) const;
     std::vector<size_t> dijkstra() const { return dijkstra(0, m_n - 1); }

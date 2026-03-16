@@ -1,6 +1,6 @@
 #include "Graph.hpp"
 
-void Graph::_depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937 &_rng, std::unordered_set<size_t> &_visited, Graph &res) const {
+void Graph::_depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937 &_rng, std::unordered_set<size_t> &_visited, Graph &res, graph_gen_callback _callback) const {
     _visited.insert(_current_cell);
     std::vector<size_t> cell_neighbours(m_neighbours[_current_cell].begin(), m_neighbours[_current_cell].end());
     std::shuffle(cell_neighbours.begin(), cell_neighbours.end(), _rng);
@@ -11,8 +11,9 @@ void Graph::_depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937 &_
 
         res.m_neighbours[_current_cell].insert(cell_neighbours[i]);
         res.m_neighbours[cell_neighbours[i]].insert(_current_cell);
+        _callback(res);
 
-        _depthFirstRecursiveGeneration(cell_neighbours[i], _rng, _visited, res);
+        _depthFirstRecursiveGeneration(cell_neighbours[i], _rng, _visited, res, _callback);
     }
 }
 
@@ -27,20 +28,20 @@ Graph Graph::_cloneVertices() const {
     return res;
 }
 
-Graph Graph::depthFirstRecursiveGeneration(size_t _initial_cell) const {
+Graph Graph::depthFirstRecursiveGeneration(graph_gen_callback _callback) const {
     std::unordered_set<size_t> visited;
     std::mt19937 rng(std::random_device{}());
     Graph res = _cloneVertices();
 
-    _depthFirstRecursiveGeneration(_initial_cell, rng, visited, res);
+    _depthFirstRecursiveGeneration(0, rng, visited, res, _callback);
 
     return res;
 }
 
-Graph Graph::depthFirstIterativeGeneration(size_t _initial_cell) const {
+Graph Graph::depthFirstIterativeGeneration(graph_gen_callback _callback) const {
     std::mt19937 rng(std::random_device{}());
-    std::unordered_set<size_t> already_stacked{_initial_cell};
-    std::vector<size_t> stack{_initial_cell};
+    std::unordered_set<size_t> already_stacked{0};
+    std::vector<size_t> stack{0};
     stack.reserve(m_n);
     Graph res = _cloneVertices();
 
@@ -55,6 +56,7 @@ Graph Graph::depthFirstIterativeGeneration(size_t _initial_cell) const {
             if (already_stacked.insert(cell_neighbours[i]).second) {
                 res.m_neighbours[current_cell].insert(cell_neighbours[i]);
                 res.m_neighbours[cell_neighbours[i]].insert(current_cell);
+                _callback(res);
 
                 stack.push_back(current_cell);
                 stack.push_back(cell_neighbours[i]);
@@ -66,7 +68,7 @@ Graph Graph::depthFirstIterativeGeneration(size_t _initial_cell) const {
     return res;
 }
 
-Graph Graph::kruskalGeneration() const {
+Graph Graph::kruskalGeneration(graph_gen_callback _callback) const {
     Graph res = _cloneVertices();
     std::vector<size_t> ids(m_n);
     std::vector<glm::uvec2> walls;
@@ -94,6 +96,7 @@ Graph Graph::kruskalGeneration() const {
         }
         res.m_neighbours[wall.x].insert(wall.y);
         res.m_neighbours[wall.y].insert(wall.x);
+        _callback(res);
 
         size_t new_id = std::min(ids[wall.x], ids[wall.y]);
         size_t old_id = std::max(ids[wall.x], ids[wall.y]);
@@ -123,15 +126,15 @@ Graph Graph::kruskalGeneration() const {
     return res;
 }
 
-Graph Graph::primGeneration(size_t _initial_cell) const {
+Graph Graph::primGeneration(graph_gen_callback _callback) const {
     Graph res = _cloneVertices();
     std::mt19937 rng(std::random_device{}());
 
     std::vector<bool> marked(m_n, false);
-    marked[_initial_cell] = true;
+    marked[0] = true;
 
-    std::vector<size_t> initial_cell_neighbours(m_neighbours[_initial_cell].begin(), m_neighbours[_initial_cell].end());
-    glm::uvec2 wall{_initial_cell, initial_cell_neighbours[rand() % initial_cell_neighbours.size()]};
+    std::vector<size_t> initial_cell_neighbours(m_neighbours[0].begin(), m_neighbours[0].end());
+    glm::uvec2 wall{0, initial_cell_neighbours[rand() % initial_cell_neighbours.size()]};
     std::vector<glm::uvec2> walls{wall};
     while (walls.size() > 0) {
         wall = walls[walls.size() - 1];
@@ -141,6 +144,7 @@ Graph Graph::primGeneration(size_t _initial_cell) const {
             marked[wall.y] = true;
             res.m_neighbours[wall.y].insert(wall.x);
             res.m_neighbours[wall.x].insert(wall.y);
+            _callback(res);
 
             std::vector<size_t> cell_neighbours(m_neighbours[wall.y].begin(), m_neighbours[wall.y].end());
             std::shuffle(cell_neighbours.begin(), cell_neighbours.end(), rng);

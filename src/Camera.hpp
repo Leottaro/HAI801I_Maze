@@ -36,6 +36,7 @@ private:
     void updateMatrix();
 
 public:
+    Camera() {}
     Camera(glm::vec3 _target, float _distance, glm::vec2 _angles = glm::vec2(0.), float _fovy = M_PI_4, float _speed = 0.4, float _scroll_speed = 0.4);
 
     bool updateInterface(float _deltaTime);

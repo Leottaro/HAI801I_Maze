@@ -1,5 +1,22 @@
 #include "Graph.hpp"
 
+Graph Graph::subPath(const std::vector<size_t> _path) {
+    Graph g;
+
+    g.m_n = _path.size();
+    g.m_vertices.resize(g.m_n);
+    g.m_neighbours = std::vector<std::unordered_set<size_t>>(g.m_n);
+    for (size_t i = 0; i < g.m_n; i++) {
+        g.m_vertices[i] = m_vertices[_path[i]];
+        if (i > 0) {
+            g.m_neighbours[i - 1].insert(i);
+            g.m_neighbours[i].insert(i - 1);
+        }
+    }
+
+    return g;
+}
+
 std::vector<size_t> Graph::dijkstra(size_t _sdeb, size_t _sfin) const {
     std::vector<size_t> distances(m_n, UINT64_MAX);
     std::vector<size_t> previous(m_n, UINT64_MAX);

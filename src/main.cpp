@@ -14,16 +14,16 @@
 #include <imgui_impl_opengl3.h>
 
 // USUAL INCLUDES
+#include "Camera.hpp"
+#include "Graph.hpp"
 #include <execinfo.h>
 #include <stdio.h>
-
 #include <array>
 #include <iostream>
 #include <unordered_set>
 #include <vector>
-
-#include "Camera.hpp"
-#include "Graph.hpp"
+#include <thread>
+#include <unistd.h>
 
 using namespace std;
 
@@ -31,7 +31,6 @@ GLuint window_width = 1280, window_height = 720;
 glm::vec2 cursor_pos = glm::vec2(0, 0);
 glm::vec2 cursor_vel = glm::vec2(0, 0);
 glm::vec2 scroll = glm::vec2(0, 0);
-bool run_update = false;
 size_t user_pos = 0;
 long user_next_pos = 0;
 std::vector<size_t> user_path = {user_pos};
@@ -50,6 +49,7 @@ bool display_path = true;
 int original_type = 0, n = 10, nbCercles = 10, nbEtage = 10;
 #define ALL_MAZE_ALGORITHM "depth-first (recursive)\0depth-first (iterative)\0Kruskal\0Prim's"
 int maze_algo = 1;
+bool animate_generation = false;
 #define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*"
 int pathfinding_algo = 0, sfin;
 
@@ -78,18 +78,38 @@ void regenerateOriginal() {
 }
 
 void regenerateMaze() {
+    uint counter = 0;
+    auto callback = [&counter](Graph &_g) {
+        if (!animate_generation || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            return;
+        }
+
+        if (++counter < _g.getN() / 200)
+            return;
+
+        counter = 0;
+
+        _g.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f);
+        original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
+
+        glFlush();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    };
+
     switch (maze_algo) {
     case 0:
-        maze = original.depthFirstRecursiveGeneration();
+        maze = original.depthFirstRecursiveGeneration(callback);
         break;
     case 1:
-        maze = original.depthFirstIterativeGeneration();
+        maze = original.depthFirstIterativeGeneration(callback);
         break;
     case 2:
-        maze = original.kruskalGeneration();
+        maze = original.kruskalGeneration(callback);
         break;
     case 3:
-        maze = original.primGeneration();
+        maze = original.primGeneration(callback);
         break;
     default:
         throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
@@ -130,6 +150,7 @@ bool updateInterface(float _deltaTime) {
         ImGui::Spacing();
 
         ImGui::Combo("Graph type", &original_type, ALL_GRAPH_TYPES);
+        ImGui::Checkbox("animate generation", &animate_generation);
         ImGui::DragInt("n", &n, 1.f, 2, 100);
         if (original_type == 2 || original_type == 3) { // circle
             ImGui::DragInt("nb cercles", &nbCercles, 1.f, 2, 100);
@@ -202,8 +223,6 @@ int main(void) {
         // OBJECTS UPDATE
         float disable_mouse_actions = updateInterface(deltaTime);
         camera.update(window, deltaTime, glm::vec3(0.), disable_mouse_actions ? glm::vec2(0.) : cursor_vel, disable_mouse_actions ? glm::vec2() : scroll);
-        if (run_update) {
-        }
 
         // Legacy OpenGL: feed camera matrices to the fixed-function pipeline.
         glm::mat4 projection = camera.getProjectionMatrix();
@@ -253,11 +272,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     const bool press_or_repeat = pressed || repeated;
 
     // cout << "key:" << key << " scancode:" << scancode << " action:" << action << " mods:" << mods << endl;
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    } else if (key == GLFW_KEY_SPACE && pressed) {
-        run_update = !run_update;
-    } else if (key == GLFW_KEY_TAB && pressed) {
+    if (key == GLFW_KEY_TAB && pressed) {
         if (user_nodes.find(user_next_pos) != user_nodes.end()) {
             std::cout << "on est kéblos !!!" << std::endl;
             user_path_pointer = ++user_path_pointer % user_neighbours.size();
