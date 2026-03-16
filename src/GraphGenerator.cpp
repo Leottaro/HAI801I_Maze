@@ -190,6 +190,7 @@ Graph Graph::sphereGraph(float _nbCercles, float _n, float nbEtage) {
                 G.m_neighbours[i].insert(i-(_nbCercles * _n + 1));
             }
         }
+        
     }
     G.m_vertices.push_back(glm::vec3(0.,0.5, 0.));
     G.m_neighbours.push_back({});

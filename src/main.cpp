@@ -46,10 +46,10 @@ bool display_maze = true;
 std::vector<size_t> path;
 bool display_path = true;
 
-#define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour"
-int original_type = 0, n = 10, nbCercles = 10, nbEtage = 10;
-#define ALL_MAZE_ALGORITHM "depth-first (iterative)\0depth-first (recursive)\0Kruskal\0Prim's"
-int maze_algo = 0;
+#define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour\0"
+int original_type = 3, n = 10, nbCercles = 10, nbEtage = 10;
+#define ALL_MAZE_ALGORITHM "depth-first (recursive)\0depth-first (iterative)\0Kruskal\0Prim's"
+int maze_algo = 1;
 #define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*"
 int pathfinding_algo = 0, sfin;
 
@@ -70,7 +70,7 @@ void regenerateOriginal() {
             original = Graph::sphereGraph(n, nbEtage, nbCercles);
             break;
         case 4:
-            original = Graph::circleGraph(n, nbCercles);
+            original = Graph::sphereContourGraph(n, nbEtage);
             break;
         default:
             throw std::runtime_error("Unimplemented graph_type in regenerateOriginal");
@@ -128,8 +128,11 @@ bool updateInterface(float _deltaTime) {
 
         ImGui::Combo("Graph type", &original_type, ALL_GRAPH_TYPES);
         ImGui::DragInt("n", &n, 1.f, 2, 100);
-        if (original_type == 2) {  // circle
+        if (original_type == 2 || original_type == 3) { // circle
             ImGui::DragInt("nb cercles", &nbCercles, 1.f, 2, 100);
+        }
+        if (original_type == 3 || original_type == 4) { // circle
+            ImGui::DragInt("nb etages", &nbEtage, 1.f, 2, 100);
         }
         if (ImGui::Button("Regenerate##original")) {
             regenerateOriginal();
@@ -167,11 +170,10 @@ int main(void) {
     // Objects initialisation
     Camera camera(glm::vec3(), 8., glm::vec2(-M_PI_4 * 0.5, 0.));
 
-    original = Graph::gridGraph(10);
-    maze = original.primGeneration();
+    regenerateOriginal();
     sfin = maze.getN() - 1;
-    path = maze.dijkstra(0, sfin);
-    path_graph = maze.subPath(path);
+    regenerateMaze();
+    regeneratePath();
 
     // timings
     float deltaTime = 0.0f;
