@@ -20,8 +20,8 @@ class Graph {
     std::vector<glm::vec3> m_vertices;
     std::vector<std::unordered_set<size_t>> m_neighbours;
 
-public:
-    typedef std::function<void(Graph &_g)> graph_gen_callback;
+   public:
+    typedef std::function<void(Graph& _g)> graph_gen_callback;
 
     // CREATION
 
@@ -35,16 +35,33 @@ public:
     inline size_t getN() const { return m_n; }
     inline std::unordered_set<size_t> getNeighbours(size_t i) const { return m_neighbours[i]; }
 
-    void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}) const {
+    void draw(const glm::vec3& _color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}, size_t _user_next_pos = 0, size_t _user_pos = 0) const {
+        glColor3f(0.f, 1.f, 0.f);
+        glPointSize(5.f);
+        glBegin(GL_POINTS);
+        glVertex3fv(glm::value_ptr(m_vertices[_user_next_pos]));
+        glEnd();
+        glColor3f(1.f, 0.f, 0.f);
+        glPointSize(5.f);
+        glBegin(GL_POINTS);
+        glVertex3fv(glm::value_ptr(m_vertices[_user_pos]));
+        glEnd();
         glColor3fv(glm::value_ptr(_color));
         glLineWidth(_line_width);
         glBegin(GL_LINES);
         for (size_t v0 = 0; v0 < m_n; v0++) {
             for (size_t v1 : m_neighbours[v0]) {
-                if (_user_nodes.find(v0) != _user_nodes.end() && _user_nodes.find(v1) != _user_nodes.end())
+                if (_user_next_pos == v0 || _user_next_pos == v1) {
+                    if (_user_nodes.find(v0) != _user_nodes.end() || _user_nodes.find(v1) != _user_nodes.end()) {
+                        glColor3f(0.f, 0.f, 1.f);
+                    } else {
+                        glColor3fv(glm::value_ptr(_color));
+                    }
+                } else if (_user_nodes.find(v0) != _user_nodes.end() && _user_nodes.find(v1) != _user_nodes.end()) {
                     glColor3f(1.f, 1.f, 1.f);
-                else
+                } else {
                     glColor3fv(glm::value_ptr(_color));
+                }
                 glVertex3fv(glm::value_ptr(m_vertices[v0]));
                 glVertex3fv(glm::value_ptr(m_vertices[v1]));
             }
@@ -53,11 +70,11 @@ public:
     }
 
     // MAZE GENERATION
-private:
-    void _depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937 &_rng, std::unordered_set<size_t> &_visited, Graph &res, graph_gen_callback _callback) const;
+   private:
+    void _depthFirstRecursiveGeneration(size_t _current_cell, std::mt19937& _rng, std::unordered_set<size_t>& _visited, Graph& res, graph_gen_callback _callback) const;
     Graph _cloneVertices() const;
 
-public:
+   public:
     Graph depthFirstRecursiveGeneration(graph_gen_callback _callback) const;
     Graph depthFirstIterativeGeneration(graph_gen_callback _callback) const;
     Graph kruskalGeneration(graph_gen_callback _callback) const;
