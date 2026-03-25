@@ -36,22 +36,24 @@ class Graph {
     inline size_t getN() const { return m_n; }
     inline std::unordered_set<size_t> getNeighbours(size_t i) const { return m_neighbours[i]; }
 
-    void draw(const glm::vec3& _color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}, size_t _user_next_pos = 0, size_t _user_pos = 0) const {
-        glColor3f(0.f, 1.f, 0.f);
-        glPointSize(5.f);
-        glBegin(GL_POINTS);
-        glVertex3fv(glm::value_ptr(m_vertices[_user_next_pos]));
-        glEnd();
-        glColor3f(1.f, 0.f, 0.f);
-        glPointSize(10.f);
-        glBegin(GL_POINTS);
-        glVertex3fv(glm::value_ptr(m_vertices[_user_pos]));
-        glEnd();
-        glPointSize(20.f);
-        glColor3f(1.f, 0.4f, 0.75f);
-        glBegin(GL_POINTS);
-        glVertex3fv(glm::value_ptr(m_vertices[m_n - 1]));
-        glEnd();
+    void draw(const glm::vec3& _color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}, size_t _user_next_pos = 0, size_t _user_pos = 0, bool gaming = false) const {
+        if(gaming){
+            glColor3f(0.f, 1.f, 0.f);
+            glPointSize(5.f);
+            glBegin(GL_POINTS);
+            glVertex3fv(glm::value_ptr(m_vertices[_user_next_pos]));
+            glEnd();
+            glColor3f(1.f, 0.f, 0.f);
+            glPointSize(10.f);
+            glBegin(GL_POINTS);
+            glVertex3fv(glm::value_ptr(m_vertices[_user_pos]));
+            glEnd();
+            glPointSize(20.f);
+            glColor3f(1.f, 0.4f, 0.75f);
+            glBegin(GL_POINTS);
+            glVertex3fv(glm::value_ptr(m_vertices[m_n - 1]));
+            glEnd();
+        }
 
         glm::vec3 color_chemin = glm::vec3(1.f);
         if (_user_nodes.find(m_n - 1) != _user_nodes.end()) {
@@ -65,12 +67,15 @@ class Graph {
                 if ((_user_next_pos == v0 || _user_next_pos == v1) && (_user_pos == v0 || _user_pos == v1)) {
                     glColor3f(0.f, 0.f, 1.f);
                 }
-                // else if(_user_next_pos == v0 || _user_next_pos == v1){
-                //     glColor3fv(glm::value_ptr(_color));
-                // }
+                else if(_user_next_pos == v0 || _user_next_pos == v1){
+                    glColor3fv(glm::value_ptr(_color));
+                }
                 else if (_user_nodes.find(v0) != _user_nodes.end() && _user_nodes.find(v1) != _user_nodes.end()) {
                     glColor3f(color_chemin.x, color_chemin.y, color_chemin.b);
                 } else {
+                    glColor3fv(glm::value_ptr(_color));
+                }
+                if(!gaming){
                     glColor3fv(glm::value_ptr(_color));
                 }
 

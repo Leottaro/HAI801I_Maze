@@ -72,7 +72,7 @@ Graph Graph::circleGraph(float _n, float _nbCercles) {
     G.m_vertices.push_back(glm::vec3(0., 0., 0.));
     G.m_neighbours.push_back({});
     for (float i = 1; i < _nbCercles + 1; i++) {
-        float r = i / _n;
+        float r = i / (_nbCercles - 1);
         for (float j = 0; j < _n; j++) {
             float theta = (j / _n) * 2 * M_PI;
             G.m_vertices.push_back(glm::vec3(r * cos(theta), 0., r * sin(theta)));

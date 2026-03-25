@@ -39,6 +39,7 @@ vector<size_t> user_neighbours;
 unordered_set<size_t> user_nodes = {user_pos};
 long user_path_pointer = 0;
 GLFWwindow* window;
+bool gaming = false;
 
 std::vector<size_t> path;
 Graph original, maze, path_graph;
@@ -237,6 +238,13 @@ bool updateInterface(float _deltaTime) {
             // init_game();
             setNextMove();
         }
+        ImGui::Spacing();
+        ImGui::SeparatorText("Play !!!");
+        ImGui::Spacing();
+        if (ImGui::Checkbox("Gaming", &gaming)) {
+            init_game();
+            setNextMove();
+        }
     }
 
     ImGui::End();
@@ -302,7 +310,7 @@ int main(void) {
             path_graph.draw(glm::vec3(0.32f, 0.64f, 0.85f), 5.f);
         }
         if (display_maze) {
-            maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f, user_nodes, user_next_pos, user_pos);
+            maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f, user_nodes, user_next_pos, user_pos, gaming);
         }
         if (display_original) {
             original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
