@@ -5,6 +5,7 @@
 
 // GLM
 #include <glm/ext.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <glm/glm.hpp>
 
 // USUAL INCLUDES
@@ -42,26 +43,38 @@ class Graph {
         glVertex3fv(glm::value_ptr(m_vertices[_user_next_pos]));
         glEnd();
         glColor3f(1.f, 0.f, 0.f);
-        glPointSize(5.f);
+        glPointSize(10.f);
         glBegin(GL_POINTS);
         glVertex3fv(glm::value_ptr(m_vertices[_user_pos]));
         glEnd();
+        glPointSize(20.f);
+        glColor3f(1.f, 0.4f, 0.75f);
+        glBegin(GL_POINTS);
+        glVertex3fv(glm::value_ptr(m_vertices[m_n-1]));
+        glEnd();
+
+        glm::vec3 color_chemin = glm::vec3(1.f);
+        if(_user_nodes.find(m_n-1) != _user_nodes.end()){
+            color_chemin = glm::vec3((float) rand() / (RAND_MAX), (float) rand() / (RAND_MAX), (float) rand() / (RAND_MAX));
+        }
         glColor3fv(glm::value_ptr(_color));
         glLineWidth(_line_width);
         glBegin(GL_LINES);
         for (size_t v0 = 0; v0 < m_n; v0++) {
             for (size_t v1 : m_neighbours[v0]) {
-                if (_user_next_pos == v0 || _user_next_pos == v1) {
-                    if (_user_nodes.find(v0) != _user_nodes.end() || _user_nodes.find(v1) != _user_nodes.end()) {
-                        glColor3f(0.f, 0.f, 1.f);
-                    } else {
-                        glColor3fv(glm::value_ptr(_color));
-                    }
-                } else if (_user_nodes.find(v0) != _user_nodes.end() && _user_nodes.find(v1) != _user_nodes.end()) {
-                    glColor3f(1.f, 1.f, 1.f);
+                if ((_user_next_pos == v0 || _user_next_pos == v1) && (_user_pos == v0 || _user_pos == v1)) {
+                    glColor3f(0.f, 0.f, 1.f);
+                }
+                // else if(_user_next_pos == v0 || _user_next_pos == v1){
+                //     glColor3fv(glm::value_ptr(_color));
+                // }
+                else if (_user_nodes.find(v0) != _user_nodes.end() && _user_nodes.find(v1) != _user_nodes.end()) {
+                    glColor3f(color_chemin.x,color_chemin.y, color_chemin.b);
                 } else {
                     glColor3fv(glm::value_ptr(_color));
                 }
+
+                
                 glVertex3fv(glm::value_ptr(m_vertices[v0]));
                 glVertex3fv(glm::value_ptr(m_vertices[v1]));
             }

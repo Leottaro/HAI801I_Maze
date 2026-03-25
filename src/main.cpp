@@ -35,7 +35,6 @@ glm::vec2 cursor_vel = glm::vec2(0, 0);
 glm::vec2 scroll = glm::vec2(0, 0);
 size_t user_pos = 0;
 long user_next_pos = 0;
-vector<size_t> user_path = {user_pos};
 vector<size_t> user_neighbours;
 unordered_set<size_t> user_nodes = {user_pos};
 long user_path_pointer = 0;
@@ -63,10 +62,6 @@ static void debugUserState(const char* tag = "state") {
     cout << "user_next_pos     = " << user_next_pos << '\n';
     cout << "user_path_pointer = " << user_path_pointer << '\n';
 
-    cout << "user_path (" << user_path.size() << "): ";
-    for (const auto v : user_path) cout << v << ", ";
-    cout << '\n';
-
     cout << "user_neighbours (" << user_neighbours.size() << "): ";
     for (const auto v : user_neighbours) cout << v << ", ";
     cout << '\n';
@@ -86,14 +81,27 @@ void setNextMove() {
         user_next_pos = -1;
         return;
     }
-    if (user_neighbours.size() == 1 && containedIn(user_nodes, user_neighbours[0])) {
-        user_next_pos = -1;
-        return;
-    }
-    do {
-        user_path_pointer = (user_path_pointer + 1) % user_neighbours.size();
-        user_next_pos = user_neighbours[user_path_pointer];
-    } while (containedIn(user_nodes, user_next_pos));
+    // if (user_neighbours.size() == 1 && containedIn(user_nodes, user_neighbours[0])) {
+    //     user_next_pos = -1;
+    //     return;
+    // }
+    // do {
+    //     std::cout << user_path_pointer << " " << user_neighbours.size() << std::endl;
+    //     user_path_pointer = (user_path_pointer + 1) % user_neighbours.size();
+    //     user_next_pos = user_neighbours[user_path_pointer];
+    // } while (containedIn(user_nodes, user_next_pos));
+    // std::cout << user_path_pointer << " " << user_neighbours.size() << std::endl;
+    user_path_pointer = (user_path_pointer + 1) % user_neighbours.size();
+    user_next_pos = user_neighbours[user_path_pointer];
+}
+
+void init_game(){
+    user_pos = 0;
+    user_nodes = {user_pos};
+    unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
+    user_neighbours.clear();
+    user_neighbours.insert(user_neighbours.end(), neigh_set.begin(), neigh_set.end());
+    setNextMove();
 }
 
 void regenerateOriginal() {
@@ -138,6 +146,7 @@ void regenerateMaze() {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     };
+    
 
     switch (maze_algo) {
         case 0:
@@ -155,6 +164,7 @@ void regenerateMaze() {
         default:
             throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
     }
+    
 }
 
 void regeneratePath() {
@@ -203,6 +213,8 @@ bool updateInterface(float _deltaTime) {
             regenerateOriginal();
             regenerateMaze();
             regeneratePath();
+            init_game();
+            setNextMove();
         }
 
         ImGui::Spacing();
@@ -213,6 +225,8 @@ bool updateInterface(float _deltaTime) {
         if (ImGui::Button("Regenerate##maze")) {
             regenerateMaze();
             regeneratePath();
+            init_game();
+            setNextMove();
         }
 
         ImGui::Spacing();
@@ -222,6 +236,8 @@ bool updateInterface(float _deltaTime) {
         ImGui::DragInt("end", &sfin, 1.f, 1, maze.getN() - 1);
         if (ImGui::Button("Recompute##path")) {
             regeneratePath();
+            //init_game();
+            setNextMove();
         }
     }
 
@@ -233,7 +249,7 @@ int main(void) {
     globalInit();
 
     // Objects initialisation
-    Camera camera(glm::vec3(), 8., glm::vec2(-M_PI_4 * 0.5, 0.));
+    Camera camera(glm::vec3(), 3., glm::vec2(M_PI / 2., 0.));
 
     regenerateOriginal();
     sfin = maze.getN() - 1;
@@ -322,34 +338,26 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     // cout << "key:" << key << " scancode:" << scancode << " action:" << action << " mods:" << mods << endl;
     if (key == GLFW_KEY_TAB && pressed) {
-        if (user_nodes.find(user_next_pos) != user_nodes.end()) {
-            cout << "on est kéblos !!!" << endl;
-            return;
-        }
+        // if (user_nodes.find(user_next_pos) != user_nodes.end()) {
+        //     cout << "on est kéblos !!!" << endl;
+        //     return;
+        // }
         user_pos = user_next_pos;
         user_nodes.insert(user_pos);
-        try {
-            cout << "trying push_back user_pos=" << user_pos << " to user_path (size before push: " << user_path.size() << ")" << endl;
-            user_path.push_back(user_pos);
-        } catch (const std::exception& e) {
-            std::cerr << "Error occurred while pushing to user_path: " << e.what() << std::endl;
-        }
         unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
         user_neighbours.clear();
         user_neighbours.insert(user_neighbours.end(), neigh_set.begin(), neigh_set.end());
-        setNextMove();
-    } else if (key == GLFW_KEY_BACKSPACE && pressed) {
-        if (user_nodes.size() > 1) {
-            user_next_pos = user_pos;
-            user_pos = user_path[user_path.size() - 1];
-            user_path.pop_back();
-            user_nodes.erase(user_pos);
+        user_path_pointer = 0;
+        user_next_pos = user_neighbours[user_path_pointer];
+        if(containedIn(user_nodes, user_next_pos)) {
+            user_path_pointer = (user_path_pointer + 1) % user_neighbours.size();
         }
+        user_next_pos = user_neighbours[user_path_pointer];
     } else if (key == GLFW_KEY_LEFT_SHIFT && pressed) {
         if (user_neighbours.size() > 0) {
-            cout << user_path_pointer << " -> ";
+            //cout << user_path_pointer << " -> ";
             setNextMove();
-            cout << user_path_pointer << endl;
+            //cout << user_path_pointer << endl;
         }
     } else if (key == GLFW_KEY_U && pressed) {
         debugUserState("debug");
