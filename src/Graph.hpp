@@ -50,12 +50,12 @@ class Graph {
         glPointSize(20.f);
         glColor3f(1.f, 0.4f, 0.75f);
         glBegin(GL_POINTS);
-        glVertex3fv(glm::value_ptr(m_vertices[m_n-1]));
+        glVertex3fv(glm::value_ptr(m_vertices[m_n - 1]));
         glEnd();
 
         glm::vec3 color_chemin = glm::vec3(1.f);
-        if(_user_nodes.find(m_n-1) != _user_nodes.end()){
-            color_chemin = glm::vec3((float) rand() / (RAND_MAX), (float) rand() / (RAND_MAX), (float) rand() / (RAND_MAX));
+        if (_user_nodes.find(m_n - 1) != _user_nodes.end()) {
+            color_chemin = glm::vec3((float)rand() / (RAND_MAX), (float)rand() / (RAND_MAX), (float)rand() / (RAND_MAX));
         }
         glColor3fv(glm::value_ptr(_color));
         glLineWidth(_line_width);
@@ -69,12 +69,11 @@ class Graph {
                 //     glColor3fv(glm::value_ptr(_color));
                 // }
                 else if (_user_nodes.find(v0) != _user_nodes.end() && _user_nodes.find(v1) != _user_nodes.end()) {
-                    glColor3f(color_chemin.x,color_chemin.y, color_chemin.b);
+                    glColor3f(color_chemin.x, color_chemin.y, color_chemin.b);
                 } else {
                     glColor3fv(glm::value_ptr(_color));
                 }
 
-                
                 glVertex3fv(glm::value_ptr(m_vertices[v0]));
                 glVertex3fv(glm::value_ptr(m_vertices[v1]));
             }

@@ -95,7 +95,7 @@ void setNextMove() {
     user_next_pos = user_neighbours[user_path_pointer];
 }
 
-void init_game(){
+void init_game() {
     user_pos = 0;
     user_nodes = {user_pos};
     unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
@@ -146,7 +146,6 @@ void regenerateMaze() {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     };
-    
 
     switch (maze_algo) {
         case 0:
@@ -164,7 +163,6 @@ void regenerateMaze() {
         default:
             throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
     }
-    
 }
 
 void regeneratePath() {
@@ -236,7 +234,7 @@ bool updateInterface(float _deltaTime) {
         ImGui::DragInt("end", &sfin, 1.f, 1, maze.getN() - 1);
         if (ImGui::Button("Recompute##path")) {
             regeneratePath();
-            //init_game();
+            // init_game();
             setNextMove();
         }
     }
@@ -349,15 +347,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         user_neighbours.insert(user_neighbours.end(), neigh_set.begin(), neigh_set.end());
         user_path_pointer = 0;
         user_next_pos = user_neighbours[user_path_pointer];
-        if(containedIn(user_nodes, user_next_pos)) {
+        if (containedIn(user_nodes, user_next_pos)) {
             user_path_pointer = (user_path_pointer + 1) % user_neighbours.size();
         }
         user_next_pos = user_neighbours[user_path_pointer];
     } else if (key == GLFW_KEY_LEFT_SHIFT && pressed) {
         if (user_neighbours.size() > 0) {
-            //cout << user_path_pointer << " -> ";
+            // cout << user_path_pointer << " -> ";
             setNextMove();
-            //cout << user_path_pointer << endl;
+            // cout << user_path_pointer << endl;
         }
     } else if (key == GLFW_KEY_U && pressed) {
         debugUserState("debug");
