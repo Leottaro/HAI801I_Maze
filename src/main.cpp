@@ -38,7 +38,7 @@ long user_next_pos = 0;
 vector<size_t> user_neighbours;
 unordered_set<size_t> user_nodes = {user_pos};
 long user_path_pointer = 0;
-GLFWwindow* window;
+GLFWwindow *window;
 bool gaming = false;
 
 std::vector<size_t> path;
@@ -49,26 +49,29 @@ bool display_path = false;
 
 #define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour\0"
 int original_type = 0, n = 10, nbCercles = 10, nbEtage = 10;
-#define ALL_MAZE_ALGORITHM "depth-first (recursive)\0depth-first (iterative)\0Kruskal\0Prim's"
+#define ALL_MAZE_ALGORITHM "depth-first (recursive)\0depth-first (iterative)\0Kruskal\0Prim's\0"
 int maze_algo = 1;
 bool animate_generation = false;
-#define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*"
+float animation_quasiseconds = 3.f;
+#define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*\0"
 int pathfinding_algo = 0, sfin;
 
 void globalInit();
 
-static void debugUserState(const char* tag = "state") {
+static void debugUserState(const char *tag = "state") {
     cout << "\n[USER DEBUG] " << tag << '\n';
     cout << "user_pos          = " << user_pos << '\n';
     cout << "user_next_pos     = " << user_next_pos << '\n';
     cout << "user_path_pointer = " << user_path_pointer << '\n';
 
     cout << "user_neighbours (" << user_neighbours.size() << "): ";
-    for (const auto v : user_neighbours) cout << v << ", ";
+    for (const auto v : user_neighbours)
+        cout << v << ", ";
     cout << '\n';
 
     cout << "user_nodes (" << user_nodes.size() << "): ";
-    for (const auto v : user_nodes) cout << v << ", ";
+    for (const auto v : user_nodes)
+        cout << v << ", ";
     cout << "\n"
          << endl;
 }
@@ -107,40 +110,42 @@ void init_game() {
 
 void regenerateOriginal() {
     switch (original_type) {
-        case 0:
-            original = Graph::gridGraph(n);
-            break;
-        case 1:
-            original = Graph::cubeGraph(n);
-            break;
-        case 2:
-            original = Graph::circleGraph(n, nbCercles);
-            break;
-        case 3:
-            original = Graph::sphereGraph(n, nbCercles, nbEtage);
-            break;
-        case 4:
-            original = Graph::sphereContourGraph(n, nbEtage);
-            break;
-        default:
-            throw std::runtime_error("Unimplemented graph_type in regenerateOriginal");
+    case 0:
+        original = Graph::gridGraph(n);
+        break;
+    case 1:
+        original = Graph::cubeGraph(n);
+        break;
+    case 2:
+        original = Graph::circleGraph(n, nbCercles);
+        break;
+    case 3:
+        original = Graph::sphereGraph(n, nbCercles, nbEtage);
+        break;
+    case 4:
+        original = Graph::sphereContourGraph(n, nbEtage);
+        break;
+    default:
+        throw std::runtime_error("Unimplemented graph_type in regenerateOriginal");
     }
 }
 
 void regenerateMaze() {
     uint counter = 0;
-    auto callback = [&counter](Graph& _g) {
+    auto callback = [&counter](Graph &_g) {
         if (!animate_generation || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             return;
         }
 
-        if (++counter < _g.getN() / 200)
+        if (++counter < 3 * _g.getN() / (250.f * animation_quasiseconds))
             return;
 
         counter = 0;
 
         _g.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f);
-        original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
+        if (display_original) {
+            original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);
+        }
 
         glFlush();
         glfwSwapBuffers(window);
@@ -149,20 +154,20 @@ void regenerateMaze() {
     };
 
     switch (maze_algo) {
-        case 0:
-            maze = original.depthFirstRecursiveGeneration(callback);
-            break;
-        case 1:
-            maze = original.depthFirstIterativeGeneration(callback);
-            break;
-        case 2:
-            maze = original.kruskalGeneration(callback);
-            break;
-        case 3:
-            maze = original.primGeneration(callback);
-            break;
-        default:
-            throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
+    case 0:
+        maze = original.depthFirstRecursiveGeneration(callback);
+        break;
+    case 1:
+        maze = original.depthFirstIterativeGeneration(callback);
+        break;
+    case 2:
+        maze = original.kruskalGeneration(callback);
+        break;
+    case 3:
+        maze = original.primGeneration(callback);
+        break;
+    default:
+        throw std::runtime_error("Unimplemented maze_algo in regenerateMaze");
     }
 }
 
@@ -171,14 +176,14 @@ void regeneratePath() {
         sfin = maze.getN() - 1;
     }
     switch (pathfinding_algo) {
-        case 0:
-            path = maze.dijkstra(0, sfin);
-            break;
-        case 1:
-            path = maze.a_star(0, sfin);
-            break;
-        default:
-            throw std::runtime_error("Unimplemented pathfinding_algo in regeneratePath");
+    case 0:
+        path = maze.dijkstra(0, sfin);
+        break;
+    case 1:
+        path = maze.a_star(0, sfin);
+        break;
+    default:
+        throw std::runtime_error("Unimplemented pathfinding_algo in regeneratePath");
     }
     path_graph = maze.subPath(path);
 }
@@ -201,11 +206,12 @@ bool updateInterface(float _deltaTime) {
 
         ImGui::Combo("Graph type", &original_type, ALL_GRAPH_TYPES);
         ImGui::Checkbox("animate generation", &animate_generation);
+        ImGui::DragFloat("duration quasi-seconds", &animation_quasiseconds, 0.01f, 0.5f, 60.f);
         ImGui::DragInt("n", &n, 1.f, 2, 100);
-        if (original_type == 2 || original_type == 3) {  // circle
+        if (original_type == 2 || original_type == 3) { // circle
             ImGui::DragInt("nb cercles", &nbCercles, 1.f, 2, 100);
         }
-        if (original_type == 3 || original_type == 4) {  // circle
+        if (original_type == 3 || original_type == 4) { // circle
             ImGui::DragInt("nb etages", &nbEtage, 1.f, 2, 100);
         }
         if (ImGui::Button("Regenerate##original")) {
@@ -270,7 +276,7 @@ int main(void) {
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
     size_t frame_count = 0;
-    glfwSwapInterval(1);  // VSync - avoid having 3000000 fps
+    glfwSwapInterval(1); // VSync - avoid having 3000000 fps
     do {
         glFlush();
         glfwSwapBuffers(window);
@@ -330,14 +336,14 @@ int main(void) {
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     // cout << "framebuffer size: " << width << ", " << height << endl;
     window_width = width;
     window_height = height;
     glViewport(0, 0, width, height);
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     const bool pressed = (action == GLFW_PRESS);
     // const bool repeated = (action == GLFW_REPEAT);
     // const bool press_or_repeat = pressed || repeated;
@@ -370,14 +376,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
     // cout << "mouse button:" << button << " action:" << action << " mods:" << mods << endl;
     // if (button == GLFW_MOUSE_BUTTON_LEFT) {
     //     glfwSetInputMode(window, GLFW_CURSOR, action == GLFW_PRESS ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
     // }
 }
 
-void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
+void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
     cursor_vel.x = xpos - cursor_pos.x;
     cursor_vel.y = ypos - cursor_pos.y;
     cursor_pos.x = xpos;
@@ -385,7 +391,7 @@ void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
     // cout << "cursor_pos: (" << cursor_pos.x << ", " << cursor_pos.y << ")\tcursor_vel: (" << cursor_vel.x << ", " << cursor_vel.y << ")" << endl;
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     // cout << "scroll: (" << xoffset << ", " << yoffset << ")" << endl;
     scroll.x = xoffset;
     scroll.y = yoffset;
@@ -407,7 +413,7 @@ void initWindow() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 #endif
-    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GL_FALSE);  // https://discourse.glfw.org/t/resizing-window-results-in-wrong-aspect-ratio/1268s
+    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GL_FALSE); // https://discourse.glfw.org/t/resizing-window-results-in-wrong-aspect-ratio/1268s
 
     window = glfwCreateWindow(window_width, window_height, "ImGui OpenGL3 example", NULL, NULL);
     if (!window) {
@@ -426,17 +432,17 @@ void initWindow() {
 }
 
 void initOpenGL() {
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);  // Ensure we can capture the escape key being pressed below
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE); // Ensure we can capture the escape key being pressed below
 
     // Ensure viewport matches framebuffer from first frame.
     int fb_w = 0, fb_h = 0;
     glfwGetFramebufferSize(window, &fb_w, &fb_h);
     glViewport(0, 0, fb_w, fb_h);
 
-    glClearColor(0.1f, 0.1f, 0.3f, 0.0f);  // Dark blue background
-    glEnable(GL_DEPTH_TEST);               // Enable depth test
-    glDepthFunc(GL_LESS);                  // Accept fragment if it closer to the camera than the former one
-    glDisable(GL_CULL_FACE);               // Keep single-face geometry visible while orbiting the camera
+    glClearColor(0.1f, 0.1f, 0.3f, 0.0f); // Dark blue background
+    glEnable(GL_DEPTH_TEST);              // Enable depth test
+    glDepthFunc(GL_LESS);                 // Accept fragment if it closer to the camera than the former one
+    glDisable(GL_CULL_FACE);              // Keep single-face geometry visible while orbiting the camera
     glEnable(GL_POINT_SMOOTH);
 }
 
@@ -467,7 +473,7 @@ void globalInit() {
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // IF using Docking Branch
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);  // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplGlfw_InitForOpenGL(window, true); // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init("#version 120");
 
     initOpenGL();
