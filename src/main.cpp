@@ -276,6 +276,8 @@ bool updateInterface(float _deltaTime) {
         if (ImGui::Button("Recompute##path")) {
             regeneratePath();
             init_game();
+            if (!gaming)
+                camera.m_center = &VEC_ZERO;
             setNextMove();
         }
         ImGui::SameLine();
