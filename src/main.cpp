@@ -214,7 +214,9 @@ bool updateInterface(float _deltaTime) {
         ImGui::Combo("Graph type", &original_type, ALL_GRAPH_TYPES);
         ImGui::Checkbox("animate generation", &animate_generation);
         ImGui::DragFloat("duration quasi-seconds", &animation_quasiseconds, 0.01f, 0.5f, 60.f);
-        ImGui::DragInt("n", &n, 1.f, 2, 100);
+        if (original_type != 5) {
+            ImGui::DragInt("n", &n, 1.f, 2, 100);
+        }
         if (original_type == 2 || original_type == 3) { // circle
             ImGui::DragInt("nb cercles", &nbCercles, 1.f, 2, 100);
         }
