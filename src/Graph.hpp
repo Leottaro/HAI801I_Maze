@@ -15,6 +15,7 @@
 #include <random>
 #include <unordered_set>
 #include <vector>
+#include <string>
 
 class Graph {
     size_t m_n;
@@ -31,6 +32,7 @@ public:
     static Graph circleGraph(float _n, float _nbCercles);
     static Graph sphereGraph(float _n, float _nbCercles, float nbEtage);
     static Graph sphereContourGraph(float _n, float nbEtage);
+    static Graph loadOFF(const std::string &filename);
 
     // GENERAL
     inline size_t getN() const { return m_n; }

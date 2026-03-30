@@ -23,6 +23,7 @@
 #include <thread>
 #include <unordered_set>
 #include <vector>
+#include <boost/algorithm/string/join.hpp>
 
 #include "Camera.hpp"
 #include "Graph.hpp"
@@ -47,14 +48,17 @@ bool display_original = false;
 bool display_maze = true;
 bool display_path = false;
 
-#define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour\0"
+#define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour\0Loaded\0"
 int original_type = 0, n = 10, nbCercles = 10, nbEtage = 10;
+#define ALL_MESHES_STR "models/bunny0.off\0models/bunny1.off\0models/bunny2.off\0models/bunny3.off\0models/face.off\0models/killeroo.off\0models/man.off\0models/rhino2.off\0"
+const std::vector<std::string> ALL_MESHES{"models/bunny0.off", "models/bunny1.off", "models/bunny2.off", "models/bunny3.off", "models/face.off", "models/killeroo.off", "models/man.off", "models/rhino2.off"}; 
+int loaded_path = 0;
 #define ALL_MAZE_ALGORITHM "depth-first (recursive)\0depth-first (iterative)\0Kruskal\0Prim's\0"
-int maze_algo = 1;
+int maze_algo = 2;
 bool animate_generation = false;
 float animation_quasiseconds = 3.f;
 #define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*\0"
-int pathfinding_algo = 0, sfin;
+int pathfinding_algo = 1, sfin;
 
 void globalInit();
 
@@ -124,6 +128,9 @@ void regenerateOriginal() {
         break;
     case 4:
         original = Graph::sphereContourGraph(n, nbEtage);
+        break;
+    case 5:
+        original = Graph::loadOFF(ALL_MESHES[loaded_path]);
         break;
     default:
         throw std::runtime_error("Unimplemented graph_type in regenerateOriginal");
@@ -214,6 +221,9 @@ bool updateInterface(float _deltaTime) {
         if (original_type == 3 || original_type == 4) { // circle
             ImGui::DragInt("nb etages", &nbEtage, 1.f, 2, 100);
         }
+        if (original_type == 5) {
+            ImGui::Combo("Mesh path", &loaded_path, ALL_MESHES_STR);
+        }
         if (ImGui::Button("Regenerate##original")) {
             regenerateOriginal();
             regenerateMaze();
@@ -238,12 +248,19 @@ bool updateInterface(float _deltaTime) {
         ImGui::SeparatorText("Pathfinding");
         ImGui::Spacing();
         ImGui::Combo("algorithm##path", &pathfinding_algo, ALL_PATHFINDING_ALGORITHM);
-        ImGui::DragInt("end", &sfin, 1.f, 1, maze.getN() - 1);
+        if (ImGui::DragInt("end", &sfin, 1.f, 1, maze.getN() - 1)) {
+            sfin = glm::clamp(sfin, 0, int(maze.getN() - 1));
+        }
         if (ImGui::Button("Recompute##path")) {
             regeneratePath();
             // init_game();
             setNextMove();
         }
+        ImGui::SameLine();
+        if (ImGui::Button("last")) {
+            sfin = maze.getN() - 1;
+        }
+
         ImGui::Spacing();
         ImGui::SeparatorText("Play !!!");
         ImGui::Spacing();
@@ -261,7 +278,7 @@ int main(void) {
     globalInit();
 
     // Objects initialisation
-    Camera camera(glm::vec3(), 3., glm::vec2(M_PI / 2., 0.));
+    Camera camera(glm::vec3(), 3., glm::vec2(-M_PI / 2., 0.));
 
     regenerateOriginal();
     sfin = maze.getN() - 1;

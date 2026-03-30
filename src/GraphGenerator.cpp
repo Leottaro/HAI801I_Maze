@@ -1,5 +1,7 @@
 #include "Graph.hpp"
 
+#include <fstream>
+
 Graph Graph::gridGraph(float _n) {
     Graph G;
 
@@ -252,6 +254,70 @@ Graph Graph::sphereContourGraph(float _n, float nbEtage) {
         G.m_neighbours[G.m_n - 1].insert(i);
         G.m_neighbours[i].insert(G.m_n - 1);
     }
+
+    return G;
+}
+
+Graph Graph::loadOFF(const std::string &filename) {
+    Graph G;
+
+    std::ifstream in(filename.c_str());
+    if (!in)
+        return G;
+    std::string offString;
+    unsigned int sizeV, sizeT, tmp;
+    in >> offString >> sizeV >> sizeT >> tmp;
+
+    G.m_n = sizeV;
+    G.m_vertices.resize(G.m_n);
+    G.m_neighbours.resize(G.m_n);
+
+    glm::vec3 buff;
+    for (unsigned int i = 0; i < sizeV; i++) {
+        in >> G.m_vertices[i][0] >> G.m_vertices[i][1] >> G.m_vertices[i][2];
+
+        while (in.peek() == ' ')
+            in.get();
+
+        if (!(in.peek() == '\n' || in.peek() == '\r' || in.eof())) {
+            in >> buff[0] >> buff[1] >> buff[2];
+        }
+
+        while (in.peek() == ' ')
+            in.get();
+    }
+
+    int s;
+    for (unsigned int i = 0; i < sizeT; i++) {
+        in >> s;
+        in >> buff[0] >> buff[1] >> buff[2];
+
+        for (unsigned int j = 0; j < 3; j++) {
+            G.m_neighbours[buff[j]].insert(buff[(j+1)%3]);
+            G.m_neighbours[buff[(j+1)%3]].insert(buff[j]);
+        }
+
+        if (!(in.peek() == '\n' || in.peek() == '\r' || in.eof())) {
+            std::string restOfLine;
+            getline(in, restOfLine);
+        }
+    }
+    in.close();
+
+    // Center points and scale to unit
+    glm::vec3 center(0.);
+    for (unsigned int i = 0; i < G.m_n; i++)
+        center += G.m_vertices[i];
+    center /= G.m_n;
+
+    float maxD = distance(G.m_vertices[0], center);
+    for (unsigned int i = 1; i < G.m_n; i++) {
+        float m = distance(G.m_vertices[i], center);
+        if (m > maxD)
+            maxD = m;
+    }
+    for (unsigned int i = 0; i < G.m_n; i++)
+        G.m_vertices[i] = (G.m_vertices[i] - center) / maxD;
 
     return G;
 }
