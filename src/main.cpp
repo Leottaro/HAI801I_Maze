@@ -107,6 +107,7 @@ void setNextMove() {
 
 void init_game() {
     user_pos = sdeb;
+    camera.m_center = &original.getVertex(user_pos);
     user_nodes = {user_pos};
     unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
     user_neighbours.clear();
@@ -286,8 +287,9 @@ bool updateInterface(float _deltaTime) {
         ImGui::SeparatorText("Play !!!");
         ImGui::Spacing();
         if (ImGui::Checkbox("Gaming", &gaming)) {
-            camera.m_center = gaming ? &original.getVertex(user_pos) : &VEC_ZERO;
             init_game();
+            if (!gaming)
+                camera.m_center = &VEC_ZERO;
             setNextMove();
         }
     }
@@ -392,7 +394,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         //     cout << "on est kéblos !!!" << endl;
         //     return;
         // }
-        camera.m_center = gaming ? &original.getVertex(user_next_pos) : &VEC_ZERO;
+        camera.m_center = &original.getVertex(user_next_pos);
         user_pos = user_next_pos;
         user_nodes.insert(user_pos);
         unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
