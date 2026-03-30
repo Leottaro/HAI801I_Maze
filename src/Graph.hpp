@@ -38,27 +38,27 @@ public:
     inline size_t getN() const { return m_n; }
     inline std::unordered_set<size_t> getNeighbours(size_t i) const { return m_neighbours[i]; }
 
-    void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}, size_t _user_next_pos = 0, size_t _user_pos = 0, bool gaming = false) const {
+    void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}, size_t _user_next_pos = 0, size_t _user_pos = 0, size_t _user_goal = 0, bool gaming = false) const {
         if (gaming) {
             glColor3f(0.f, 1.f, 0.f);
-            glPointSize(5.f);
+            glPointSize(10.f);
             glBegin(GL_POINTS);
             glVertex3fv(glm::value_ptr(m_vertices[_user_next_pos]));
             glEnd();
             glColor3f(1.f, 0.f, 0.f);
-            glPointSize(10.f);
+            glPointSize(20.f);
             glBegin(GL_POINTS);
             glVertex3fv(glm::value_ptr(m_vertices[_user_pos]));
             glEnd();
             glPointSize(20.f);
             glColor3f(1.f, 0.4f, 0.75f);
             glBegin(GL_POINTS);
-            glVertex3fv(glm::value_ptr(m_vertices[m_n - 1]));
+            glVertex3fv(glm::value_ptr(m_vertices[_user_goal]));
             glEnd();
         }
 
         glm::vec3 color_chemin = glm::vec3(1.f);
-        if (_user_nodes.find(m_n - 1) != _user_nodes.end()) {
+        if (_user_nodes.find(_user_goal) != _user_nodes.end()) {
             color_chemin = glm::vec3((float)rand() / (RAND_MAX), (float)rand() / (RAND_MAX), (float)rand() / (RAND_MAX));
         }
         glColor3fv(glm::value_ptr(_color));

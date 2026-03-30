@@ -58,7 +58,7 @@ int maze_algo = 2;
 bool animate_generation = false;
 float animation_quasiseconds = 3.f;
 #define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*\0"
-int pathfinding_algo = 1, sfin;
+int pathfinding_algo = 1, sdeb=0, sfin;
 
 void globalInit();
 
@@ -104,7 +104,7 @@ void setNextMove() {
 }
 
 void init_game() {
-    user_pos = 0;
+    user_pos = sdeb;
     user_nodes = {user_pos};
     unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
     user_neighbours.clear();
@@ -179,15 +179,15 @@ void regenerateMaze() {
 }
 
 void regeneratePath() {
-    if (static_cast<size_t>(sfin) >= maze.getN() - 1) {
-        sfin = maze.getN() - 1;
-    }
+    sdeb = glm::clamp(sdeb, 0, int(maze.getN() - 1));
+    sfin = glm::clamp(sfin, 0, int(maze.getN() - 1));
+    
     switch (pathfinding_algo) {
     case 0:
-        path = maze.dijkstra(0, sfin);
+        path = maze.dijkstra(sdeb, sfin);
         break;
     case 1:
-        path = maze.a_star(0, sfin);
+        path = maze.a_star(sdeb, sfin);
         break;
     default:
         throw std::runtime_error("Unimplemented pathfinding_algo in regeneratePath");
@@ -250,12 +250,25 @@ bool updateInterface(float _deltaTime) {
         ImGui::SeparatorText("Pathfinding");
         ImGui::Spacing();
         ImGui::Combo("algorithm##path", &pathfinding_algo, ALL_PATHFINDING_ALGORITHM);
+        if (ImGui::Button("randomize##sdeb")) {
+            sdeb = rand()%int(maze.getN() - 1);
+        }
+        ImGui::SameLine();
+        if (ImGui::DragInt("début", &sdeb, 1.f, 1, maze.getN() - 1)) {
+            sdeb = glm::clamp(sdeb, 0, int(maze.getN() - 1));
+        }
+
+        if (ImGui::Button("randomize##sfin")) {
+            sfin = rand()%int(maze.getN() - 1);
+        }
+        ImGui::SameLine();
         if (ImGui::DragInt("end", &sfin, 1.f, 1, maze.getN() - 1)) {
             sfin = glm::clamp(sfin, 0, int(maze.getN() - 1));
         }
+
         if (ImGui::Button("Recompute##path")) {
             regeneratePath();
-            // init_game();
+            init_game();
             setNextMove();
         }
         ImGui::SameLine();
@@ -335,7 +348,7 @@ int main(void) {
             path_graph.draw(glm::vec3(0.32f, 0.64f, 0.85f), 5.f);
         }
         if (display_maze) {
-            maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f, user_nodes, user_next_pos, user_pos, gaming);
+            maze.draw(glm::vec3(1.f, 0.831373f, 0.211765f), 3.f, user_nodes, user_next_pos, user_pos, sfin, gaming);
         }
         if (display_original) {
             original.draw(glm::vec3(1.f, 0.f, 0.f), 0.5f);

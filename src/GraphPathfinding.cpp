@@ -22,7 +22,7 @@ std::vector<size_t> Graph::dijkstra(size_t _sdeb, size_t _sfin) const {
     std::vector<size_t> previous(m_n, UINT64_MAX);
     std::vector<bool> visited(m_n, false);
 
-    previous[_sdeb] == UINT64_MAX;
+    previous[_sdeb] = UINT64_MAX;
     distances[_sdeb] = 0;
 
     for (size_t i = 0; i < m_n; i++) {
