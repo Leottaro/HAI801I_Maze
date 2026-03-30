@@ -50,7 +50,7 @@ bool display_path = false;
 
 #define ALL_GRAPH_TYPES "Grid\0Cube\0Circle\0Sphere\0SphereContour\0Loaded\0"
 int original_type = 0, n = 10, nbCercles = 10, nbEtage = 10;
-#define ALL_MESHES_STR "face\0/killeroo\0man\0rhino2\0"
+#define ALL_MESHES_STR "face\0killeroo\0man\0rhino2\0"
 const std::vector<std::string> ALL_MESHES{"models/face.off", "models/killeroo.off", "models/man.off", "models/rhino2.off"}; 
 int loaded_path = 0;
 #define ALL_MAZE_ALGORITHM "depth-first (recursive)\0depth-first (iterative)\0Kruskal\0Prim's\0"
