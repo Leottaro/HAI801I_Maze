@@ -36,7 +36,8 @@ public:
 
     // GENERAL
     inline size_t getN() const { return m_n; }
-    inline std::unordered_set<size_t> getNeighbours(size_t i) const { return m_neighbours[i]; }
+    inline const glm::vec3 &getVertex(size_t i) const { return m_vertices[i]; }
+    inline const std::unordered_set<size_t> &getNeighbours(size_t i) const { return m_neighbours[i]; }
 
     void draw(const glm::vec3 &_color = glm::vec3(1.f, 1.f, 1.f), float _line_width = 1.f, std::unordered_set<size_t> _user_nodes = {0}, size_t _user_next_pos = 0, size_t _user_pos = 0, size_t _user_goal = 0, bool gaming = false) const {
         if (gaming) {

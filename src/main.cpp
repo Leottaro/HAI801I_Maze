@@ -60,6 +60,8 @@ float animation_quasiseconds = 3.f;
 #define ALL_PATHFINDING_ALGORITHM "Dijkstra\0A*\0"
 int pathfinding_algo = 1, sdeb=0, sfin;
 
+Camera camera;
+
 void globalInit();
 
 static void debugUserState(const char *tag = "state") {
@@ -206,6 +208,10 @@ bool updateInterface(float _deltaTime) {
         ImGui::Checkbox("display original", &display_original);
         ImGui::Checkbox("display maze", &display_maze);
         ImGui::Checkbox("display path", &display_path);
+        bool freecam = (camera.m_type == CameraFree);
+        if (ImGui::Checkbox("freecam", &freecam)) {
+            camera.m_type = freecam ? CameraFree : CameraOrbital;
+        }
 
         ImGui::Spacing();
         ImGui::SeparatorText("Original graph");
@@ -280,6 +286,7 @@ bool updateInterface(float _deltaTime) {
         ImGui::SeparatorText("Play !!!");
         ImGui::Spacing();
         if (ImGui::Checkbox("Gaming", &gaming)) {
+            camera.m_center = gaming ? &original.getVertex(user_pos) : &VEC_ZERO;
             init_game();
             setNextMove();
         }
@@ -293,10 +300,8 @@ int main(void) {
     globalInit();
 
     // Objects initialisation
-    Camera camera(glm::vec3(), 3., glm::vec2(-M_PI / 2., 0.));
-
     regenerateOriginal();
-    sfin = maze.getN() - 1;
+    sfin = original.getN() - 1;
     regenerateMaze();
     regeneratePath();
 
@@ -331,7 +336,8 @@ int main(void) {
 
         // OBJECTS UPDATE
         float disable_mouse_actions = updateInterface(deltaTime);
-        camera.update(window, deltaTime, glm::vec3(0.), disable_mouse_actions ? glm::vec2(0.) : cursor_vel, disable_mouse_actions ? glm::vec2() : scroll);
+        disable_mouse_actions = camera.updateInterface() || disable_mouse_actions;
+        camera.update(window, deltaTime, cursor_vel, scroll, disable_mouse_actions);
 
         // Legacy OpenGL: feed camera matrices to the fixed-function pipeline.
         glm::mat4 projection = camera.getProjectionMatrix();
@@ -386,6 +392,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         //     cout << "on est kéblos !!!" << endl;
         //     return;
         // }
+        camera.m_center = gaming ? &original.getVertex(user_next_pos) : &VEC_ZERO;
         user_pos = user_next_pos;
         user_nodes.insert(user_pos);
         unordered_set<size_t> neigh_set = maze.getNeighbours(user_pos);
